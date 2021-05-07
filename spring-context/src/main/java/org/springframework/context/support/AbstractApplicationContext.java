@@ -548,23 +548,23 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
-			// 为刷新准备上下文。
+			// 为刷新容器预处理。
 			prepareRefresh();
 			
-			// 告诉子类刷新内部bean工厂
+			// 告诉子类刷新内部Bean工厂
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 			
-			// 准备在此上下文中使用的bean工厂。
+			// BeanFactory预处理工作,对Bean工厂进行属性填充。
 			prepareBeanFactory(beanFactory);
 			
 			try {
-				// 允许在上下文子类中对bean工厂进行后处理。
+				// 允许在上下文子类中对Bean工厂进行后置处理。空方法子类实现
 				postProcessBeanFactory(beanFactory);
 				
-				// 在上下文中调用注册为bean的工厂处理器。处理很多注解
+				// 调动在上下文中Bean工厂的后置处理器。处理很多注解
 				invokeBeanFactoryPostProcessors(beanFactory);
 				
-				// 注册拦截bean创建的bean处理器。
+				// 调用Bean的后置处理器。
 				registerBeanPostProcessors(beanFactory);
 				
 				// 初始化此上下文的消息源。
@@ -576,13 +576,13 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// (空的)初始化特定上下文子类中的其他特殊bean。spring boot重写此方法,启动tomcat
 				onRefresh();
 				
-				// 检查侦听器bean并注册它们。
+				// 检查侦听器Bean并注册它们到多播器。
 				registerListeners();
 				
 				// 实例化所有剩余的(非lazy-init)单例。
 				finishBeanFactoryInitialization(beanFactory);
 				
-				// 最后一步:发布相应的事件
+				// 最后一步:容器刷新,发布相应的事件。(Spring cloud也是从这里启动)
 				finishRefresh();
 			} catch (BeansException ex) {
 				if (logger.isWarnEnabled()) {
@@ -607,11 +607,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 	
 	/**
-	 * Prepare this context for refreshing, setting its startup date and
-	 * active flag as well as performing any initialization of property sources.
+	 * 为刷新准备这个上下文，设置它的启动日期和活动标志，并对属性源执行任何初始化。
 	 */
 	protected void prepareRefresh() {
-		// Switch to active.
+		// 切换到活跃。
 		this.startupDate = System.currentTimeMillis();
 		this.closed.set(false);
 		this.active.set(true);
@@ -624,11 +623,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			}
 		}
 		
-		// Initialize any placeholder property sources in the context environment.
+		// 容器属性设置(空方法子类实现)
 		initPropertySources();
 		
-		// Validate that all properties marked as required are resolvable:
-		// see ConfigurablePropertyResolver#setRequiredProperties
+		// 验证属性
 		getEnvironment().validateRequiredProperties();
 		
 		// Store pre-refresh ApplicationListeners...
@@ -646,22 +644,24 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 	
 	/**
-	 * <p>Replace any stub property sources with actual instances.
+	 * <p>用实际实例替换任何存根属性源。
 	 * @see org.springframework.core.env.PropertySource.StubPropertySource
-	 * @see org.springframework.web.context.support.WebApplicationContextUtils#initServletPropertySources
+	 * //@see org.springframework.web.context.support.WebApplicationContextUtils#initServletPropertySources
 	 */
 	protected void initPropertySources() {
-		// For subclasses: do nothing by default.
+		// 子类实现
 	}
 	
 	/**
-	 * Tell the subclass to refresh the internal bean factory.
+	 * 告诉子类刷新内部bean工厂。
 	 * @return the fresh BeanFactory instance
 	 * @see #refreshBeanFactory()
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 刷新bean工厂
 		refreshBeanFactory();
+		// 获取bean工厂
 		return getBeanFactory();
 	}
 	
@@ -725,9 +725,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 	
 	/**
-	 * Instantiate and invoke all registered BeanFactoryPostProcessor beans,
-	 * respecting explicit order if given.
-	 * <p>Must be called before singleton instantiation.
+	 * 实例化并调用所有注册的BeanFactoryPostProcessor bean，如果给出显式顺序。
+	 * <p>必须在单例实例化之前调用。
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
@@ -741,9 +740,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 	
 	/**
-	 * Instantiate and register all BeanPostProcessor beans,
-	 * respecting explicit order if given.
-	 * <p>Must be called before any instantiation of application beans.
+	 * 实例化并注册所有BeanPostProcessor bean，如果给出显式的顺序。
+	 * <p>必须在应用程序bean的任何实例化之前调用。
 	 */
 	protected void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
 		PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, this);
@@ -868,37 +866,35 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 	
 	/**
-	 * Finish the initialization of this context's bean factory,
-	 * initializing all remaining singleton beans.
+	 * 完成此上下文的bean工厂的初始化，初始化所有剩余的单例bean。
 	 */
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
-		// Initialize conversion service for this context.
+		// 为我们的Bean工厂创建类型转换器Convert
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
 			beanFactory.setConversionService(
 					beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class));
 		}
 		
-		// Register a default embedded value resolver if no bean post-processor
-		// (such as a PropertyPlaceholderConfigurer bean) registered any before:
-		// at this point, primarily for resolution in annotation attribute values.
+		// 如果之前没有任何bean后处理程序(例如PropertyPlaceholderConfigurer bean)注册，则注册一个默认的嵌入式值解析器:
+		// 此时，主要用于解析注释属性值。
 		if (!beanFactory.hasEmbeddedValueResolver()) {
 			beanFactory.addEmbeddedValueResolver(strVal -> getEnvironment().resolvePlaceholders(strVal));
 		}
 		
-		// Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.
+		// 处理关于aspectj,尽早初始化LoadTimeleaverAware bean，以便尽早注册它们的转换器。
 		String[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.class, false, false);
 		for (String weaverAwareName : weaverAwareNames) {
 			getBean(weaverAwareName);
 		}
 		
-		// Stop using the temporary ClassLoader for type matching.
+		// 停止使用临时classLoader进行类型匹配。
 		beanFactory.setTempClassLoader(null);
 		
-		// Allow for caching all bean definition metadata, not expecting further changes.
+		// 冻结所有Bean定义,说明注册的Bean定义将不被修改或任何进一步的处理
 		beanFactory.freezeConfiguration();
 		
-		// Instantiate all remaining (non-lazy-init) singletons.
+		// 实例化所有剩余的(非lazy-init)单例。
 		beanFactory.preInstantiateSingletons();
 	}
 	
