@@ -190,7 +190,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private final Map<String, Scope> scopes = new LinkedHashMap<>(8);
 	
 	/**
-	 * Security context used when running with a SecurityManager.
+	 * 与SecurityManager运行时使用的安全上下文。
 	 */
 	@Nullable
 	private SecurityContextProvider securityContextProvider;
@@ -1026,7 +1026,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 	
 	/**
-	 * Delegate the creation of the access control context to the
+	 * 将访问控制上下文的创建委托给
 	 * {@link #setSecurityContextProvider SecurityContextProvider}.
 	 */
 	@Override
@@ -1911,7 +1911,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * @param beanName the name of the bean to find a definition for
 	 * @return the BeanDefinition for this prototype name (never {@code null})
 	 * @throws org.springframework.beans.factory.NoSuchBeanDefinitionException if the bean definition cannot be
-	 * resolved
+	 *                                                                         resolved
 	 * @throws BeansException                                                  in case of errors
 	 * @see RootBeanDefinition
 	 * @see ChildBeanDefinition

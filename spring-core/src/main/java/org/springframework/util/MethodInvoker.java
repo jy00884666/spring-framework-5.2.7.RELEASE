@@ -29,38 +29,37 @@ import org.springframework.lang.Nullable;
  * <p>Usage: Specify "targetClass"/"targetMethod" or "targetObject"/"targetMethod",
  * optionally specify arguments, prepare the invoker. Afterwards, you may
  * invoke the method any number of times, obtaining the invocation result.
- *
  * @author Colin Sampaleanu
  * @author Juergen Hoeller
- * @since 19.02.2004
  * @see #prepare
  * @see #invoke
+ * @since 19.02.2004
  */
 public class MethodInvoker {
-
+	
 	private static final Object[] EMPTY_ARGUMENTS = new Object[0];
-
-
+	
 	@Nullable
 	protected Class<?> targetClass;
-
+	
 	@Nullable
 	private Object targetObject;
-
+	
 	@Nullable
 	private String targetMethod;
-
+	
 	@Nullable
 	private String staticMethod;
-
+	
 	@Nullable
 	private Object[] arguments;
-
-	/** The method we will call. */
+	
+	/**
+	 * The method we will call.
+	 */
 	@Nullable
 	private Method methodObject;
-
-
+	
 	/**
 	 * Set the target class on which to call the target method.
 	 * Only necessary when the target method is static; else,
@@ -71,7 +70,7 @@ public class MethodInvoker {
 	public void setTargetClass(@Nullable Class<?> targetClass) {
 		this.targetClass = targetClass;
 	}
-
+	
 	/**
 	 * Return the target class on which to call the target method.
 	 */
@@ -79,7 +78,7 @@ public class MethodInvoker {
 	public Class<?> getTargetClass() {
 		return this.targetClass;
 	}
-
+	
 	/**
 	 * Set the target object on which to call the target method.
 	 * Only necessary when the target method is not static;
@@ -93,7 +92,7 @@ public class MethodInvoker {
 			this.targetClass = targetObject.getClass();
 		}
 	}
-
+	
 	/**
 	 * Return the target object on which to call the target method.
 	 */
@@ -101,7 +100,7 @@ public class MethodInvoker {
 	public Object getTargetObject() {
 		return this.targetObject;
 	}
-
+	
 	/**
 	 * Set the name of the method to be invoked.
 	 * Refers to either a static method or a non-static method,
@@ -112,7 +111,7 @@ public class MethodInvoker {
 	public void setTargetMethod(@Nullable String targetMethod) {
 		this.targetMethod = targetMethod;
 	}
-
+	
 	/**
 	 * Return the name of the method to be invoked.
 	 */
@@ -120,7 +119,7 @@ public class MethodInvoker {
 	public String getTargetMethod() {
 		return this.targetMethod;
 	}
-
+	
 	/**
 	 * Set a fully qualified static method name to invoke,
 	 * e.g. "example.MyExampleClass.myExampleMethod".
@@ -131,7 +130,7 @@ public class MethodInvoker {
 	public void setStaticMethod(String staticMethod) {
 		this.staticMethod = staticMethod;
 	}
-
+	
 	/**
 	 * Set arguments for the method invocation. If this property is not set,
 	 * or the Object array is of length 0, a method with no arguments is assumed.
@@ -139,15 +138,14 @@ public class MethodInvoker {
 	public void setArguments(Object... arguments) {
 		this.arguments = arguments;
 	}
-
+	
 	/**
 	 * Return the arguments for the method invocation.
 	 */
 	public Object[] getArguments() {
 		return (this.arguments != null ? this.arguments : EMPTY_ARGUMENTS);
 	}
-
-
+	
 	/**
 	 * Prepare the specified method.
 	 * The method can be invoked any number of times afterwards.
@@ -160,30 +158,29 @@ public class MethodInvoker {
 			if (lastDotIndex == -1 || lastDotIndex == this.staticMethod.length()) {
 				throw new IllegalArgumentException(
 						"staticMethod must be a fully qualified class plus method name: " +
-						"e.g. 'example.MyExampleClass.myExampleMethod'");
+								"e.g. 'example.MyExampleClass.myExampleMethod'");
 			}
 			String className = this.staticMethod.substring(0, lastDotIndex);
 			String methodName = this.staticMethod.substring(lastDotIndex + 1);
 			this.targetClass = resolveClassName(className);
 			this.targetMethod = methodName;
 		}
-
+		
 		Class<?> targetClass = getTargetClass();
 		String targetMethod = getTargetMethod();
 		Assert.notNull(targetClass, "Either 'targetClass' or 'targetObject' is required");
 		Assert.notNull(targetMethod, "Property 'targetMethod' is required");
-
+		
 		Object[] arguments = getArguments();
 		Class<?>[] argTypes = new Class<?>[arguments.length];
 		for (int i = 0; i < arguments.length; ++i) {
 			argTypes[i] = (arguments[i] != null ? arguments[i].getClass() : Object.class);
 		}
-
+		
 		// Try to get the exact method first.
 		try {
 			this.methodObject = targetClass.getMethod(targetMethod, argTypes);
-		}
-		catch (NoSuchMethodException ex) {
+		} catch (NoSuchMethodException ex) {
 			// Just rethrow exception if we can't get any match.
 			this.methodObject = findMatchingMethod();
 			if (this.methodObject == null) {
@@ -191,7 +188,7 @@ public class MethodInvoker {
 			}
 		}
 	}
-
+	
 	/**
 	 * Resolve the given class name into a Class.
 	 * <p>The default implementations uses {@code ClassUtils.forName},
@@ -203,7 +200,7 @@ public class MethodInvoker {
 	protected Class<?> resolveClassName(String className) throws ClassNotFoundException {
 		return ClassUtils.forName(className, ClassUtils.getDefaultClassLoader());
 	}
-
+	
 	/**
 	 * Find a matching method with the specified name for the specified arguments.
 	 * @return a matching method, or {@code null} if none
@@ -216,13 +213,13 @@ public class MethodInvoker {
 		String targetMethod = getTargetMethod();
 		Object[] arguments = getArguments();
 		int argCount = arguments.length;
-
+		
 		Class<?> targetClass = getTargetClass();
 		Assert.state(targetClass != null, "No target class set");
 		Method[] candidates = ReflectionUtils.getAllDeclaredMethods(targetClass);
 		int minTypeDiffWeight = Integer.MAX_VALUE;
 		Method matchingMethod = null;
-
+		
 		for (Method candidate : candidates) {
 			if (candidate.getName().equals(targetMethod)) {
 				if (candidate.getParameterCount() == argCount) {
@@ -235,10 +232,10 @@ public class MethodInvoker {
 				}
 			}
 		}
-
+		
 		return matchingMethod;
 	}
-
+	
 	/**
 	 * Return the prepared Method object that will be invoked.
 	 * <p>Can for example be used to determine the return type.
@@ -253,7 +250,7 @@ public class MethodInvoker {
 		}
 		return this.methodObject;
 	}
-
+	
 	/**
 	 * Return whether this invoker has been prepared already,
 	 * i.e. whether it allows access to {@link #getPreparedMethod()} already.
@@ -261,14 +258,14 @@ public class MethodInvoker {
 	public boolean isPrepared() {
 		return (this.methodObject != null);
 	}
-
+	
 	/**
 	 * Invoke the specified method.
 	 * <p>The invoker needs to have been prepared before.
 	 * @return the object (possibly null) returned by the method invocation,
 	 * or {@code null} if the method has a void return type
 	 * @throws InvocationTargetException if the target method threw an exception
-	 * @throws IllegalAccessException if the target method couldn't be accessed
+	 * @throws IllegalAccessException    if the target method couldn't be accessed
 	 * @see #prepare
 	 */
 	@Nullable
@@ -282,27 +279,20 @@ public class MethodInvoker {
 		ReflectionUtils.makeAccessible(preparedMethod);
 		return preparedMethod.invoke(targetObject, getArguments());
 	}
-
-
+	
 	/**
-	 * Algorithm that judges the match between the declared parameter types of a candidate method
-	 * and a specific list of arguments that this method is supposed to be invoked with.
-	 * <p>Determines a weight that represents the class hierarchy difference between types and
-	 * arguments. A direct match, i.e. type Integer -> arg of class Integer, does not increase
-	 * the result - all direct matches means weight 0. A match between type Object and arg of
-	 * class Integer would increase the weight by 2, due to the superclass 2 steps up in the
-	 * hierarchy (i.e. Object) being the last one that still matches the required type Object.
-	 * Type Number and class Integer would increase the weight by 1 accordingly, due to the
-	 * superclass 1 step up the hierarchy (i.e. Number) still matching the required type Number.
-	 * Therefore, with an arg of type Integer, a constructor (Integer) would be preferred to a
-	 * constructor (Number) which would in turn be preferred to a constructor (Object).
-	 * All argument weights get accumulated.
-	 * <p>Note: This is the algorithm used by MethodInvoker itself and also the algorithm
-	 * used for constructor and factory method selection in Spring's bean container (in case
-	 * of lenient constructor resolution which is the default for regular bean definitions).
-	 * @param paramTypes the parameter types to match
-	 * @param args the arguments to match
-	 * @return the accumulated weight for all arguments
+	 * 判断候选方法声明的参数类型与要调用此方法的特定参数列表之间的匹配的算法。
+	 * <p>确定表示类型和参数之间的类层次结构差异的权重。直接匹配,即整数类型- >参数类的整数,
+	 * 不会增加结果——所有直接匹配意味着重量e。之间的匹配类型的对象和参数类整数会增加体重的2,由于超类2步的层次结构(即种)
+	 * 仍然是最后一个匹配所需的类型对象。
+	 * 类型Number和类Integer将相应地增加权重1，因为超类1在层次结构上(即Number)仍然匹配所需的类型Number。
+	 * 因此，对于Integer类型的参数，构造函数
+	 * (Integer)将优先于构造函数(Number)，而构造函数(Number)又优先于构造函数(对象)
+	 * 。所有参数的权重都被累积注意:这是MethodInvoker本身使用的算法，
+	 * 也是在Spring的bean容器中用于构造函数和工厂方法选择的算法(在宽松的构造函数解析情况下，这是常规bean定义的默认值)。
+	 * @param paramTypes 要匹配的参数类型
+	 * @param args       要匹配的参数
+	 * @return 所有参数的累积权重
 	 */
 	public static int getTypeDifferenceWeight(Class<?>[] paramTypes, Object[] args) {
 		int result = 0;
@@ -317,12 +307,10 @@ public class MethodInvoker {
 					if (paramType.equals(superClass)) {
 						result = result + 2;
 						superClass = null;
-					}
-					else if (ClassUtils.isAssignable(paramType, superClass)) {
+					} else if (ClassUtils.isAssignable(paramType, superClass)) {
 						result = result + 2;
 						superClass = superClass.getSuperclass();
-					}
-					else {
+					} else {
 						superClass = null;
 					}
 				}
@@ -333,5 +321,5 @@ public class MethodInvoker {
 		}
 		return result;
 	}
-
+	
 }
