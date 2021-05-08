@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+}
+
+group 'org.springframework'
+version '5.2.7.RELEASE'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // 加依赖
+    optional(project(":spring-aop"))
+    optional(project(":spring-beans"))
+    optional(project(":spring-context"))
+    compile(project(":spring-core"))
+
+
+    /**
+     * compile : 依赖的包，编译并打包到最终的 apk 文件中。
+     * provided : 依赖的包只参与编译而不会打包到最终的 apk 文件中。
+     * runtime : 适用于依赖的包只作用在运行时而不需要在编译时。
+     * optional : 选择性依赖
+     */
+
+}

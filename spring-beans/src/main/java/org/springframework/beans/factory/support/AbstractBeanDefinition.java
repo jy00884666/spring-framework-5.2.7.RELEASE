@@ -679,9 +679,8 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 	
 	/**
-	 * Set whether this bean is a primary autowire candidate.
-	 * <p>If this value is {@code true} for exactly one bean among multiple
-	 * matching candidates, it will serve as a tie-breaker.
+	 * 设置此bean是否为主要的自动装配候选对象。
+	 * <p>如果这个值为{@code true}，只适用于多个匹配候选bean中的一个bean，那么它将起到打破平局的作用。
 	 */
 	@Override
 	public void setPrimary(boolean primary) {
@@ -689,7 +688,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 	
 	/**
-	 * Return whether this bean is a primary autowire candidate.
+	 * 返回此bean是否是主要的自动装配候选对象。
 	 */
 	@Override
 	public boolean isPrimary() {
@@ -697,8 +696,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 	
 	/**
-	 * Register a qualifier to be used for autowire candidate resolution,
-	 * keyed by the qualifier's type name.
+	 * 注册一个限定符，用于自动装配候选解析，由限定符的类型名进行键控
 	 * @see AutowireCandidateQualifier#getTypeName()
 	 */
 	public void addQualifier(AutowireCandidateQualifier qualifier) {
@@ -706,14 +704,14 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 	
 	/**
-	 * Return whether this bean has the specified qualifier.
+	 * 返回此bean是否具有指定的限定符。
 	 */
 	public boolean hasQualifier(String typeName) {
 		return this.qualifiers.containsKey(typeName);
 	}
 	
 	/**
-	 * Return the qualifier mapped to the provided type name.
+	 * 返回映射到提供的类型名称的限定符。
 	 */
 	@Nullable
 	public AutowireCandidateQualifier getQualifier(String typeName) {
@@ -738,11 +736,9 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 	
 	/**
-	 * Specify a callback for creating an instance of the bean,
-	 * as an alternative to a declaratively specified factory method.
-	 * <p>If such a callback is set, it will override any other constructor
-	 * or factory method metadata. However, bean property population and
-	 * potential annotation-driven injection will still apply as usual.
+	 * 指定用于创建bean实例的回调，作为声明式指定工厂方法的替代方法。
+	 * <p>如果设置了这样的回调，它将覆盖任何其他构造函数或工厂方法元数据。
+	 * 但是，bean属性填充和潜在的注释驱动注入仍将照常应用。
 	 * @see #setConstructorArgumentValues(ConstructorArgumentValues)
 	 * @see #setPropertyValues(MutablePropertyValues)
 	 * @since 5.0
