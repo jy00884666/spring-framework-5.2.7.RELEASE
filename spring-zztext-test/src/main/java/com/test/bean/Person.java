@@ -21,4 +21,12 @@ public class Person {
 	public void setSex(String sex) {
 		this.sex = sex;
 	}
+	
+	@Override
+	public String toString() {
+		return "Person{" +
+				"name='" + name + '\'' +
+				", sex='" + sex + '\'' +
+				'}';
+	}
 }

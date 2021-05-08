@@ -1372,6 +1372,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	
 	/**
 	 * 给对象BeanWrapper赋值
+	 * 宽松模式,严谨模式 (构造函数参数权重匹配的最小值)
 	 * @param beanName     the name of the bean
 	 * @param mbd          the bean definition for the bean
 	 * @param ctors        the chosen candidate constructors

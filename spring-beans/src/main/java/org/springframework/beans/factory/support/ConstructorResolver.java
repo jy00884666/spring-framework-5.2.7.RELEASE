@@ -270,7 +270,7 @@ class ConstructorResolver {
 				/**
 				 * isLenientConstructorResolution 判断接续构造函数时是用宽松模式还是严格模式,默认true 宽松模式
 				 * 严格模式:解析构造函数时必须全部匹配,否则就抛异常
-				 * 宽松模式:用"最接近的模式"进行匹配
+				 * 宽松模式:用"最接近的模式"进行匹配,即构造函数参数权重匹配的最小值
 				 * typeDiffWeight:类型差异权重
 				 */
 				int typeDiffWeight = (mbd.isLenientConstructorResolution() ?
