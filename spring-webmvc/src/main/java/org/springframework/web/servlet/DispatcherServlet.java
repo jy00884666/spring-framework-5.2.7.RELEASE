@@ -1351,7 +1351,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	}
 	
 	/**
-	 * Render the given ModelAndView.
+	 * 渲染试图
 	 * <p>This is the last stage in handling a request. It may involve resolving the view by name.
 	 * @param mv       the ModelAndView to render
 	 * @param request  current HTTP servlet request
@@ -1360,15 +1360,15 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @throws Exception        if there's a problem rendering the view
 	 */
 	protected void render(ModelAndView mv, HttpServletRequest request, HttpServletResponse response) throws Exception {
-		// Determine locale for request and apply it to the response.
+		// 获取国际化语言解析器对象
 		Locale locale =
 				(this.localeResolver != null ? this.localeResolver.resolveLocale(request) : request.getLocale());
 		response.setLocale(locale);
-		
+		// 获取试图名称
 		View view;
 		String viewName = mv.getViewName();
 		if (viewName != null) {
-			// We need to resolve the view name.
+			// 根据视图名称解析成为真正的物理视图(通过视图解析器对象)
 			view = resolveViewName(viewName, mv.getModelInternal(), locale, request);
 			if (view == null) {
 				throw new ServletException("Could not resolve view with name '" + mv.getViewName() +
@@ -1412,25 +1412,25 @@ public class DispatcherServlet extends FrameworkServlet {
 	}
 	
 	/**
-	 * Resolve the given view name into a View object (to be rendered).
-	 * <p>The default implementations asks all ViewResolvers of this dispatcher.
-	 * Can be overridden for custom resolution strategies, potentially based on
-	 * specific model attributes or request parameters.
-	 * @param viewName the name of the view to resolve
-	 * @param model    the model to be passed to the view
-	 * @param locale   the current locale
-	 * @param request  current HTTP servlet request
-	 * @return the View object, or {@code null} if none found
-	 * @throws Exception if the view cannot be resolved
-	 *                   (typically in case of problems creating an actual View object)
+	 * 将给定的视图名称解析为一个view对象(要呈现)。
+	 * <p>默认实现询问这个分派器的所有ViewResolvers。
+	 * 可以覆盖自定义解析策略，可能基于特定的模型属性或请求参数。
+	 * @param viewName 要解析的视图的名称
+	 * @param model    Controller 返回的模型数据
+	 * @param locale   国家语言代码
+	 * @param request  当前的请求对象
+	 * @return 视图对象，或{@code null}，如果没有找到
+	 * @throws Exception 如果视图不能被解析(通常在创建实际视图对象时出现问题)
 	 * @see ViewResolver#resolveViewName
 	 */
 	@Nullable
 	protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,
 								   Locale locale, HttpServletRequest request) throws Exception {
-		
+		// 判断当前的视图解析器集合是否为空
 		if (this.viewResolvers != null) {
+			// 循环调用视图解析器对象解析现图
 			for (ViewResolver viewResolver : this.viewResolvers) {
+				// 一旦有视图解所器能够解析出试图,后面的提图解析器不在参与解析直接返同
 				View view = viewResolver.resolveViewName(viewName, locale);
 				if (view != null) {
 					return view;
