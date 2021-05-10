@@ -427,13 +427,27 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		return result;
 	}
 	
+	/**
+	 * 调用 Bean 对象的后置处理器
+	 */
 	@Override
 	public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
 			throws BeansException {
 		
 		Object result = existingBean;
+		// 获取容器中的所有的 Bean 的后置处理器
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
+			/**
+			 * 在这里是后置处理器的【第九次调用】aop和事务都会在这里生成代理对象
+			 *
+			 * 【很重要】
+			 * AOP @EnableAspectJAutoProxy 为我们容器中导入了 AnnotationAwareAspectJAutoProxyCreator
+			 * 我们事务注解@EnableTransactionManagement 为我们的容器导入了 Infrast ructureAdvisorAutoProxy
+			 * 都是实现了 BeanPostProcessor 接口, InstantiationAwareBeanPostProcessor,
+			 * 在这里实现的是 BeanPostProcessor 接口的 postProcessAfterInitialization 来生成我们的代理对象
+			 */
 			Object current = processor.postProcessAfterInitialization(result, beanName);
+			// 若有一个返回 null 则直接返回原始的
 			if (current == null) {
 				return result;
 			}
@@ -1849,10 +1863,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	
 	private void invokeAwareMethods(final String beanName, final Object bean) {
 		if (bean instanceof Aware) {
+			// bean 实现了 BeanNameAware
 			if (bean instanceof BeanNameAware) {
 				((BeanNameAware) bean).setBeanName(beanName);
 			}
 			if (bean instanceof BeanClassLoaderAware) {
+				// bean 实现了 BeanClassLoaderAware
 				ClassLoader bcl = getBeanClassLoader();
 				if (bcl != null) {
 					((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);

@@ -37,7 +37,6 @@ import org.springframework.util.ClassUtils;
  * {@link org.springframework.aop.framework.autoproxy.AbstractAdvisorAutoProxyCreator}
  * subclass that exposes AspectJ's invocation context and understands AspectJ's rules
  * for advice precedence when multiple pieces of advice come from the same aspect.
- *
  * @author Adrian Colyer
  * @author Juergen Hoeller
  * @author Ramnivas Laddad
@@ -45,10 +44,9 @@ import org.springframework.util.ClassUtils;
  */
 @SuppressWarnings("serial")
 public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator {
-
+	
 	private static final Comparator<Advisor> DEFAULT_PRECEDENCE_COMPARATOR = new AspectJPrecedenceComparator();
-
-
+	
 	/**
 	 * Sort the supplied {@link Advisor} instances according to AspectJ precedence.
 	 * <p>If two pieces of advice come from the same aspect, they will have the same
@@ -79,12 +77,11 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 				result.add(pcAdvisor.getAdvisor());
 			}
 			return result;
-		}
-		else {
+		} else {
 			return super.sortAdvisors(advisors);
 		}
 	}
-
+	
 	/**
 	 * Add an {@link ExposeInvocationInterceptor} to the beginning of the advice chain.
 	 * <p>This additional advice is needed when using AspectJ pointcut expressions
@@ -94,10 +91,16 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 	protected void extendAdvisors(List<Advisor> candidateAdvisors) {
 		AspectJProxyUtils.makeAdvisorChainAspectJCapableIfNecessary(candidateAdvisors);
 	}
-
+	
+	/**
+	 * 重写父类的 shouldSkip()方法
+	 * @param beanClass the class of the bean
+	 * @param beanName  the name of the bean
+	 * @return
+	 */
 	@Override
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
-		// TODO: Consider optimization by caching the list of the aspect names
+		// 找到候选的 Advisors (通知器也可以说成增强器对象)
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 		for (Advisor advisor : candidateAdvisors) {
 			if (advisor instanceof AspectJPointcutAdvisor &&
@@ -107,37 +110,36 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 		}
 		return super.shouldSkip(beanClass, beanName);
 	}
-
-
+	
 	/**
 	 * Implements AspectJ's {@link PartialComparable} interface for defining partial orderings.
 	 */
 	private static class PartiallyComparableAdvisorHolder implements PartialComparable {
-
+		
 		private final Advisor advisor;
-
+		
 		private final Comparator<Advisor> comparator;
-
+		
 		public PartiallyComparableAdvisorHolder(Advisor advisor, Comparator<Advisor> comparator) {
 			this.advisor = advisor;
 			this.comparator = comparator;
 		}
-
+		
 		@Override
 		public int compareTo(Object obj) {
 			Advisor otherAdvisor = ((PartiallyComparableAdvisorHolder) obj).advisor;
 			return this.comparator.compare(this.advisor, otherAdvisor);
 		}
-
+		
 		@Override
 		public int fallbackCompareTo(Object obj) {
 			return 0;
 		}
-
+		
 		public Advisor getAdvisor() {
 			return this.advisor;
 		}
-
+		
 		@Override
 		public String toString() {
 			Advice advice = this.advisor.getAdvice();
@@ -158,5 +160,5 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 			return sb.toString();
 		}
 	}
-
+	
 }
