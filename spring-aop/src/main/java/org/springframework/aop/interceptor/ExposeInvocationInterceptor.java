@@ -36,16 +36,17 @@ import org.springframework.core.PriorityOrdered;
  * Target objects should be plain POJOs as far as possible.
  *
  * <p>If used, this interceptor will normally be the first in the interceptor chain.
- *
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
 @SuppressWarnings("serial")
 public final class ExposeInvocationInterceptor implements MethodInterceptor, PriorityOrdered, Serializable {
-
-	/** Singleton instance of this class. */
+	
+	/**
+	 * Singleton instance of this class.
+	 */
 	public static final ExposeInvocationInterceptor INSTANCE = new ExposeInvocationInterceptor();
-
+	
 	/**
 	 * Singleton advisor for this class. Use in preference to INSTANCE when using
 	 * Spring AOP, as it prevents the need to create a new Advisor to wrap the instance.
@@ -53,57 +54,61 @@ public final class ExposeInvocationInterceptor implements MethodInterceptor, Pri
 	public static final Advisor ADVISOR = new DefaultPointcutAdvisor(INSTANCE) {
 		@Override
 		public String toString() {
-			return ExposeInvocationInterceptor.class.getName() +".ADVISOR";
+			return ExposeInvocationInterceptor.class.getName() + ".ADVISOR";
 		}
 	};
-
+	
 	private static final ThreadLocal<MethodInvocation> invocation =
 			new NamedThreadLocal<>("Current AOP method invocation");
-
-
+	
 	/**
 	 * Return the AOP Alliance MethodInvocation object associated with the current invocation.
 	 * @return the invocation object associated with the current invocation
 	 * @throws IllegalStateException if there is no AOP invocation in progress,
-	 * or if the ExposeInvocationInterceptor was not added to this interceptor chain
+	 *                               or if the ExposeInvocationInterceptor was not added to this interceptor chain
 	 */
 	public static MethodInvocation currentInvocation() throws IllegalStateException {
 		MethodInvocation mi = invocation.get();
 		if (mi == null) {
 			throw new IllegalStateException(
 					"No MethodInvocation found: Check that an AOP invocation is in progress and that the " +
-					"ExposeInvocationInterceptor is upfront in the interceptor chain. Specifically, note that " +
-					"advices with order HIGHEST_PRECEDENCE will execute before ExposeInvocationInterceptor! " +
-					"In addition, ExposeInvocationInterceptor and ExposeInvocationInterceptor.currentInvocation() " +
-					"must be invoked from the same thread.");
+							"ExposeInvocationInterceptor is upfront in the interceptor chain. Specifically, note that" +
+							" " +
+							"advices with order HIGHEST_PRECEDENCE will execute before ExposeInvocationInterceptor! " +
+							"In addition, ExposeInvocationInterceptor and ExposeInvocationInterceptor" +
+							".currentInvocation() " +
+							"must be invoked from the same thread.");
 		}
 		return mi;
 	}
-
-
+	
 	/**
 	 * Ensures that only the canonical instance can be created.
 	 */
 	private ExposeInvocationInterceptor() {
 	}
-
+	
 	@Override
 	public Object invoke(MethodInvocation mi) throws Throwable {
 		MethodInvocation oldInvocation = invocation.get();
+		// 记录当前正在执行的拦截器
 		invocation.set(mi);
 		try {
+			/**
+			 * 第一次传入的是当前方法拦截器对象本身 ReflectiveMethodInvocation.java
+			 * 这里调用 proceed()方法又回到了 ReflectiveMethodInvocation.proceed()方法中
+			 */
 			return mi.proceed();
-		}
-		finally {
+		} finally {
 			invocation.set(oldInvocation);
 		}
 	}
-
+	
 	@Override
 	public int getOrder() {
 		return PriorityOrdered.HIGHEST_PRECEDENCE + 1;
 	}
-
+	
 	/**
 	 * Required to support serialization. Replaces with canonical instance
 	 * on deserialization, protecting Singleton pattern.
@@ -112,5 +117,5 @@ public final class ExposeInvocationInterceptor implements MethodInterceptor, Pri
 	private Object readResolve() {
 		return INSTANCE;
 	}
-
+	
 }

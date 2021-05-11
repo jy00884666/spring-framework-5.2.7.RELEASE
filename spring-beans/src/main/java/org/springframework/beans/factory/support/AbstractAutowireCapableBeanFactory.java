@@ -1136,12 +1136,22 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
 		Object bean = null;
 		if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
-			// 确保bean类在这一点上被实际解析。
+			// 判断容器中是否有 InstantiationAwareBeanPostProcessors
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+				// 获取当前 Bean 的 class 对象
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
+					/**
+					 * 后置处理器的【第一次】调用总共有九处调用事务在这里不会被调用, aop的才会被调用
+					 * 为什么aop在这里调用了,因为在此处需要解析出对应的切面暴露到缓存中
+					 */
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
+					// 若 InstantiationAwareBeanPostProcessors 后置处理器的 postProcessBeforeInstantiation 返回不为 null
 					if (bean != null) {
+						/**
+						 * 后置处理器的第二处调用,该后置处理器若被调用的话,那么第一处的处理器肯定返回的不是null
+						 * InstantiationAwareBeanPostProcessors 后置处理器 postProcessAfterInitialization
+						 */
 						bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
 					}
 				}

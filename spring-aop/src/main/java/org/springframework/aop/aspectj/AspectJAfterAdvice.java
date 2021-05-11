@@ -26,39 +26,38 @@ import org.springframework.aop.AfterAdvice;
 
 /**
  * Spring AOP advice wrapping an AspectJ after advice method.
- *
  * @author Rod Johnson
  * @since 2.0
  */
 @SuppressWarnings("serial")
 public class AspectJAfterAdvice extends AbstractAspectJAdvice
 		implements MethodInterceptor, AfterAdvice, Serializable {
-
+	
 	public AspectJAfterAdvice(
 			Method aspectJBeforeAdviceMethod, AspectJExpressionPointcut pointcut, AspectInstanceFactory aif) {
-
+		
 		super(aspectJBeforeAdviceMethod, pointcut, aif);
 	}
-
-
+	
 	@Override
 	public Object invoke(MethodInvocation mi) throws Throwable {
 		try {
+			// 本拦截器是后置通知拦截器对象,执行下一个通知
 			return mi.proceed();
-		}
-		finally {
+		} finally {
+			// 后置通知的方法总是会被执行因为是 finally 包裹的
 			invokeAdviceMethod(getJoinPointMatch(), null, null);
 		}
 	}
-
+	
 	@Override
 	public boolean isBeforeAdvice() {
 		return false;
 	}
-
+	
 	@Override
 	public boolean isAfterAdvice() {
 		return true;
 	}
-
+	
 }
