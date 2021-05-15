@@ -172,19 +172,18 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 	
 	/**
-	 * Add the given singleton factory for building the specified singleton
-	 * if necessary.
-	 * <p>To be called for eager registration of singletons, e.g. to be able to
-	 * resolve circular references.
-	 * @param beanName         the name of the bean
-	 * @param singletonFactory the factory for the singleton object
+	 * 把 Bean 对象从二级缓存移至三级缓,二级缓存与三级缓存互斥
 	 */
 	protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(singletonFactory, "Singleton factory must not be null");
 		synchronized (this.singletonObjects) {
+			// (一级缓存)单例对象的缓存
 			if (!this.singletonObjects.containsKey(beanName)) {
+				// (三级缓存)单例工厂的缓存
 				this.singletonFactories.put(beanName, singletonFactory);
+				// (二级缓存)早期单例对象的缓存
 				this.earlySingletonObjects.remove(beanName);
+				// 记录已经处理保存的 bean
 				this.registeredSingletons.add(beanName);
 			}
 		}
@@ -221,12 +220,17 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				// 二级缓存,尝试获取半成品对象:也就是刚刚调用了构造方法实例化,但还来不及给bean的属性进行赋值初始化的对象
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
-					/**三级缓存,获取ObjectFactory这个对象就是解决循环依赖的关键所在,在ioc后置处理器的过程中,
-					 * 当bean调用了构造方法的时候会把半成品对象包裹成ObjectFactory暴露到三级缓存中*/
+					/**
+					 * 三级缓存,获取 ObjectFactory 这个对象就是解决循环依赖的关键所在,在 ioc 后置处理器的过程中,
+					 * 当bean调用了构造方法的时候会把半成品对象包裹成 ObjectFactory 暴露到三级缓存中
+					 * ObjectFactory(其实是一个 lambda 表达式来进行 AOP 生成代理对象)与二级缓存互斥
+					 * lambda 表达式 == getEarlyBeanReference(beanName, mbd, bean);
+					 * */
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
-						// 把三级缓存移植到二级缓存中
+						// 执行 lambda AOP
 						singletonObject = singletonFactory.getObject();
+						// 把三级缓存移植到二级缓存中
 						this.earlySingletonObjects.put(beanName, singletonObject);
 						this.singletonFactories.remove(beanName);
 					}

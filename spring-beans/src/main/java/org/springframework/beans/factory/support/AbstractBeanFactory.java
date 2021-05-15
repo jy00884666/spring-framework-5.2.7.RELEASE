@@ -175,7 +175,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private final List<BeanPostProcessor> beanPostProcessors = new CopyOnWriteArrayList<>();
 	
 	/**
-	 * Indicates whether any InstantiationAwareBeanPostProcessors have been registered.
+	 * 指示是否已经注册了任何 InstantiationAwareBeanPostProcessors。
 	 */
 	private volatile boolean hasInstantiationAwareBeanPostProcessors;
 	
@@ -966,8 +966,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 	
 	/**
-	 * Return whether this factory holds a InstantiationAwareBeanPostProcessor
-	 * that will get applied to singleton beans on creation.
+	 * 返回该工厂是否后置处理器
+	 * 用于单例 bean 的 InstantiationAwareBeanPostProcessor。
 	 * @see #addBeanPostProcessor
 	 * @see org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor
 	 */

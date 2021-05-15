@@ -181,7 +181,8 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			Object retVal;
 			/**
 			 * 这个配置很重要也很实用【暴露代理对象到线程变量中】需要搭配 @EnableAspectJAutoProxy(exposeProxy = true)一起使用
-			 *
+			 * 比如我们的 aop 中 add 和 mod 方法都足被切入的方法,但是在切入的方法中通过
+			 * this来调用另外一个方法的时候,那么该方法就不会被代理执方,而是通过方法内部执行
 			 * public int add(int numA, int numB) {
 			 * 		System. out.printLn("执行目标方法:add");
 			 * 		return numA + numB;

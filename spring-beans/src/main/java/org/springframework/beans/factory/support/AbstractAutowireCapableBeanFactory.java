@@ -597,9 +597,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 		
-		/**判断是否可以提前暴露早期半成品对象
+		/**
+		 * 判断是否可以提前暴露早期半成品对象
 		 * this.allowCircularReferences默认为true
 		 * isSingletonCurrentlyInCreation(beanName)表示当前Bean对象正在创建SingletonCurrentlyInCreation
+		 * 如果当前创建的是单例 bean && 允许循坏依赖 && 还在创建过程中，那么则提早暴露
 		 * */
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
@@ -609,7 +611,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
-			// 把早期半成品对象包装成一个SingletonFactory对象,该对象提供了一个getObject方法,改方法内部调用
+			// 把早期半成品对象包装成一个 SingletonFactory 对象,该对象提供了一个 getObject 方法,改方法内部调用
+			// 第四次调用后置处理器
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 		
@@ -984,19 +987,22 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 	
 	/**
-	 * Obtain a reference for early access to the specified bean,
-	 * typically for the purpose of resolving a circular reference.
+	 * 获取早期半成品对象 bean 的代理对象，通常用于解析循环依赖
 	 * @param beanName the name of the bean (for error handling purposes)
 	 * @param mbd      the merged bean definition for the bean
 	 * @param bean     the raw bean instance
 	 * @return the object to expose as bean reference
 	 */
 	protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
+		// 正常情况下(不需要代理时), 该是什么, 这里就返回什么, 不会对 bean 进行任何操作
 		Object exposedObject = bean;
+		// Bean 的定义并非合成类 && 有后置处理器
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+			// 遍这里经过一系列的processor，保证 B 能够拿到 A 的代理对象的引用
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
 					SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
+					// 获取新的代理对象,在原有目标对象 Bean 的基础上封装的代理对象
 					exposedObject = ibp.getEarlyBeanReference(exposedObject, beanName);
 				}
 			}
