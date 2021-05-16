@@ -235,10 +235,18 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		return null;
 	}
 	
+	/**
+	 * Service出现了循环依赖,提前进行 AOP
+	 * @param bean     the raw bean instance
+	 * @param beanName the name of the bean
+	 * @return
+	 */
 	@Override
 	public Object getEarlyBeanReference(Object bean, String beanName) {
 		Object cacheKey = getCacheKey(bean.getClass(), beanName);
+		// 存入提前进行 AOP 处理对象集合 earlyProxyReferences,后续会从这个集合里判断,如果存在会则不会再做一次代理增强
 		this.earlyProxyReferences.put(cacheKey, bean);
+		// 如果符合被代理的条件,返回代理对象,并非一定
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
 	
@@ -299,7 +307,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 	
 	/**
-	 * 在该后置方法中事务和aop的代理对象都是在这生成的
+	 * 在该后置方法中事务和 aop 的代理对象都是在这生成的
+	 * 正常情况进行 aop 的地方
 	 * @see #getAdvicesAndAdvisorsForBean
 	 */
 	@Override
@@ -307,6 +316,11 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (bean != null) {
 			// 获取缓存key
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
+			/**
+			 * earlyProxyReferences 中存放的是那些提前进行了 aop 的 Bean
+			 * 如果提前进行过 aop 说明已经增强变成了代理对象,这里就不在进行代理对象增强处理
+			 * remove 方法若没有删除成功返回的是 null != bean 就会返回 true
+			 */
 			if (this.earlyProxyReferences.remove(cacheKey) != bean) {
 				// 找到合适的就会被代理
 				return wrapIfNecessary(bean, beanName, cacheKey);
@@ -363,7 +377,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (specificInterceptors != DO_NOT_PROXY) {
 			// 表示当前的对象已经代理模式处理过了
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
-			// 创建真正的代理对象
+			// 基于 Advisor 创建真正的代理对象
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
 			this.proxyTypes.put(cacheKey, proxy.getClass());
