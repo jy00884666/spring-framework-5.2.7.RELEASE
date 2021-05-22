@@ -183,6 +183,7 @@ public abstract class BeanUtils {
 				return KotlinDelegate.instantiateClass(ctor, args);
 			} else {
 				Class<?>[] parameterTypes = ctor.getParameterTypes();
+				// 不能指定比构造函数参数更多的参数
 				Assert.isTrue(args.length <= parameterTypes.length,
 						"Can't specify more arguments than constructor parameters");
 				Object[] argsWithDefaultValues = new Object[args.length];
@@ -195,15 +196,20 @@ public abstract class BeanUtils {
 						argsWithDefaultValues[i] = args[i];
 					}
 				}
+				// 创建对象
 				return ctor.newInstance(argsWithDefaultValues);
 			}
 		} catch (InstantiationException ex) {
+			// 它是抽象类吗?
 			throw new BeanInstantiationException(ctor, "Is it an abstract class?", ex);
 		} catch (IllegalAccessException ex) {
+			// 构造函数可访问吗?
 			throw new BeanInstantiationException(ctor, "Is the constructor accessible?", ex);
 		} catch (IllegalArgumentException ex) {
+			// 构造函数的非法参数
 			throw new BeanInstantiationException(ctor, "Illegal arguments for constructor", ex);
 		} catch (InvocationTargetException ex) {
+			// 构造函数 异常
 			throw new BeanInstantiationException(ctor, "Constructor threw exception", ex.getTargetException());
 		}
 	}

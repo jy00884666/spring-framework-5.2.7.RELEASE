@@ -893,8 +893,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				if (isFactoryBean(beanName)) {
 					// 是的话给BeanName加前缀符号"&"
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+					// 进行类型转换
 					if (bean instanceof FactoryBean) {
 						final FactoryBean<?> factory = (FactoryBean<?>) bean;
+						// 判断这个 FactoryBean 是否希望急切的初始化
 						boolean isEagerInit;
 						// 是否是系统安全接口
 						if (System.getSecurityManager() != null && factory instanceof SmartFactoryBean) {
@@ -905,6 +907,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							isEagerInit = (factory instanceof SmartFactoryBean &&
 									((SmartFactoryBean<?>) factory).isEagerInit());
 						}
+						// 如果希望急切的初始化,则通过beanName获取bean实例
 						if (isEagerInit) {
 							// 调用真正的getBean流程
 							getBean(beanName);
@@ -917,8 +920,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 		}
 		
-		// Trigger post-initialization callback for all applicable beans...
+		// 遍历 beanNames ,触发所有 SmartInitializingSingleton 的后初始化回调
 		for (String beanName : beanNames) {
+			// 获取 beanName 对应的 bean 实例
 			Object singletonInstance = getSingleton(beanName);
 			if (singletonInstance instanceof SmartInitializingSingleton) {
 				final SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;

@@ -185,7 +185,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private volatile boolean hasDestructionAwareBeanPostProcessors;
 	
 	/**
-	 * Map from scope identifier String to corresponding Scope.
+	 * 从范围标识符字符串映射到相应的范围。
 	 */
 	private final Map<String, Scope> scopes = new LinkedHashMap<>(8);
 	
@@ -376,7 +376,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					});
 					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				} else if (mbd.isPrototype()) {
-					// It's a prototype -> create a new instance.
+					// 原型模式的bean对象创建
 					Object prototypeInstance = null;
 					try {
 						beforePrototypeCreation(beanName);
