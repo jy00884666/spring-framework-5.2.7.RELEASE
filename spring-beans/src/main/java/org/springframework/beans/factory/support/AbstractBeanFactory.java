@@ -206,7 +206,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private final Set<String> alreadyCreated = Collections.newSetFromMap(new ConcurrentHashMap<>(256));
 	
 	/**
-	 * Names of beans that are currently in creation.
+	 * 原型创建后的回调。<p>默认实现将原型标记为不再创建。
 	 */
 	private final ThreadLocal<Object> prototypesCurrentlyInCreation =
 			new NamedThreadLocal<>("Prototype beans currently in creation");
@@ -286,6 +286,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		
 		// 尝试从缓存中获取对象
 		Object sharedInstance = getSingleton(beanName);
+		// 如果bean的单例对象找到了,且没有创建bean实例时要使用的参数
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -295,6 +296,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
+			/**返回对象的实例,这句话存在的意思是当你实现了 FactoryBean 接口的对象,
+			 * 需要获取具体的对象的时候就需要此方法来进行获取了*/
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		} else {
 			// Spring只能解决set方式注入的循环依赖,不能解决构造器方式的注入
@@ -374,16 +377,19 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 							throw ex;
 						}
 					});
+					// 返回对象的实例,实现了FactoryBean 接口的对象
 					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				} else if (mbd.isPrototype()) {
 					// 原型模式的bean对象创建
 					Object prototypeInstance = null;
 					try {
 						beforePrototypeCreation(beanName);
+						// 进入创建Bean的逻辑
 						prototypeInstance = createBean(beanName, mbd, args);
 					} finally {
 						afterPrototypeCreation(beanName);
 					}
+					// 返回对象的实例,实现了FactoryBean 接口的对象
 					bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
 				} else {
 					String scopeName = mbd.getScope();
@@ -395,11 +401,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 						Object scopedInstance = scope.get(beanName, () -> {
 							beforePrototypeCreation(beanName);
 							try {
+								// 进入创建Bean的逻辑
 								return createBean(beanName, mbd, args);
 							} finally {
 								afterPrototypeCreation(beanName);
 							}
 						});
+						// 返回对象的实例,实现了FactoryBean 接口的对象
 						bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
 					} catch (IllegalStateException ex) {
 						throw new BeanCreationException(beanName,
@@ -1140,8 +1148,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 	
 	/**
-	 * Callback after prototype creation.
-	 * <p>The default implementation marks the prototype as not in creation anymore.
+	 * 对象创建后的回调。<p>默认实现将对象标记为不再创建。
 	 * @param beanName the name of the prototype that has been created
 	 * @see #isPrototypeCurrentlyInCreation
 	 */

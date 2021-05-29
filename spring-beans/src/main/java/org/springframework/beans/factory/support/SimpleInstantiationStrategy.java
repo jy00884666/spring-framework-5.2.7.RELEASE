@@ -56,20 +56,25 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
-		/**如果有需要覆盖或者动态替换的方法则使用cgLib进行动态代理,因为可以在创建代理的同时将动态方法织入类中,
+		/**如果有需要覆盖或者动态替换的方法则使用 cgLib 进行动态代理,因为可以在创建代理的同时将动态方法织入类中,
 		 * 但是如果没有需要动态改变的方法,为了方便直接反射就可以了*/
 		if (!bd.hasMethodOverrides()) {
-			// 此处获取到指定的构造器对bean进行实例化
+			// 此处获取到指定的构造器对 bean 进行实例化
 			Constructor<?> constructorToUse;
+			// 锁定对象,使获得实例化构造方法线程安全
 			synchronized (bd.constructorArgumentLock) {
+				// 查看 bd 对象里使用否含有构造方法
 				constructorToUse = (Constructor<?>) bd.resolvedConstructorOrFactoryMethod;
+				// 如果没有
 				if (constructorToUse == null) {
+					// 从 db 中获取 beanClass
 					final Class<?> clazz = bd.getBeanClass();
+					// 如果要实例化的 beanDefinition 是一个接口,则直接抛出异常
 					if (clazz.isInterface()) {
 						throw new BeanInstantiationException(clazz, "Specified class is an interface");
 					}
 					try {
-						// 是系统安全对象
+						// 获取系统安全管理器,判断是系统安全对象
 						if (System.getSecurityManager() != null) {
 							/**
 							 * 访问控制器AccessController.doPrivileged中断了栈检查过程，
@@ -83,16 +88,17 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 							// 获取构造方法
 							constructorToUse = clazz.getDeclaredConstructor();
 						}
+						// 获取到构造器之后将构造器赋值给 bd 中的属性
 						bd.resolvedConstructorOrFactoryMethod = constructorToUse;
 					} catch (Throwable ex) {
 						throw new BeanInstantiationException(clazz, "No default constructor found", ex);
 					}
 				}
 			}
-			// 实例化
+			// 通过反射生成具体的实例化对象
 			return BeanUtils.instantiateClass(constructorToUse);
 		} else {
-			// 必须生成CGLIB子类。
+			// 必须生成 cglib 子类。
 			return instantiateWithMethodInjection(bd, beanName, owner);
 		}
 	}

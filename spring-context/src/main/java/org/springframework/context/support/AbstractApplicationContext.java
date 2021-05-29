@@ -744,10 +744,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>必须在单例实例化之前调用。
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+		/**
+		 * 获取到当前应用程序上下文的 beanFactoryPostProcessors 变量的值,并且实例化调用执行所有已经注册的
+		 * beanFactoryPostProcessor
+		 * 默认情况下,通过 getBeanFactoryPostProcessors() 来获取已经注册的 BFPP,但是默认是空的,
+		 * 那么问题来了,如果你想扩展,怎么进行扩展工作?
+		 * */
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 		
-		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
-		// (e.g. through an @Bean method registered by ConfigurationClassPostProcessor)
+		// 如果通过一个由 ConfigurationcLassPostProcessor 注册的 Bean 方法),检测 LoadTimeleaver 并准备编织
 		if (beanFactory.getTempClassLoader() == null && beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
 			beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
 			beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
