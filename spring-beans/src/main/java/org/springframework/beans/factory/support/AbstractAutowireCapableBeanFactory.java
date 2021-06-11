@@ -623,7 +623,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// 初始化bean实例。
 		Object exposedObject = bean;
 		try {
-			// 依赖注入,属性赋值(调用set方法进行赋值)
+			// 依赖注入,属性赋值(调用set方法进行赋值),其中,可能存在依赖于其他bean的属性,则会递归初始化依赖的bean
 			populateBean(beanName, mbd, instanceWrapper);
 			// 对象初始化操作(在这里可能生成代理对象)
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
@@ -1881,6 +1881,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					(mbd != null ? mbd.getResourceDescription() : null),
 					beanName, "Invocation of init method failed", ex);
 		}
+		// 如果mbd为null || mbd不是"synthetic"
 		if (mbd == null || !mbd.isSynthetic()) {
 			// 调用后置处理器的 PostProcessorsAfterInitialization 方法,生成AOP代理对象
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
