@@ -101,15 +101,20 @@ final class PostProcessorRegistrationDelegate {
 					processedBeans.add(ppName);
 				}
 			}
+			// 排序不重要,况且currentRegistryProcessors这里也只有一个数据
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
+			// 合并list,不重要(为什么要合并,因为还有自己的)
 			registryProcessors.addAll(currentRegistryProcessors);
+			// 最重要,注意这里是方法调用执行所有BeanDefinitionRegistryPostProcessor
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+			// 执行完成了所有BeanDefinitionRegistryPostProcessor这个list只是一个临时变量,故而要清除
 			currentRegistryProcessors.clear();
 			
-			// Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
+			// 调用所有实现 ordered 接口的 BeanDefinitionRegistryPostProcessor 实现类
 			postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true,
 					false);
 			for (String ppName : postProcessorNames) {
+				// PriorityOrdered 接口与ordered 接口同时实现,则只会在上面处理,这里不再处理
 				if (!processedBeans.contains(ppName) && beanFactory.isTypeMatch(ppName, Ordered.class)) {
 					currentRegistryProcessors.add(
 							beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
@@ -272,8 +277,9 @@ final class PostProcessorRegistrationDelegate {
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(applicationContext));
 	}
 	
+	// 排序postProcessors集合,根据beanFactory
 	private static void sortPostProcessors(List<?> postProcessors, ConfigurableListableBeanFactory beanFactory) {
-		// Nothing to sort?
+		// 判断是否需要排序
 		if (postProcessors.size() <= 1) {
 			return;
 		}

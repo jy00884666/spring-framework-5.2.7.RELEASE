@@ -16,12 +16,12 @@
 
 package org.springframework.core;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.ObjectUtils;
 
 /**
  * {@link Comparator} implementation for {@link Ordered} objects, sorting
@@ -40,26 +40,24 @@ import org.springframework.util.ObjectUtils;
  * assigned a value of {@link Ordered#LOWEST_PRECEDENCE}, thus ending up
  * at the end of a sorted collection in arbitrary order with respect to
  * other objects with the same order value.
- *
  * @author Juergen Hoeller
  * @author Sam Brannen
- * @since 07.04.2003
  * @see Ordered
  * @see PriorityOrdered
  * @see org.springframework.core.annotation.AnnotationAwareOrderComparator
  * @see java.util.List#sort(java.util.Comparator)
  * @see java.util.Arrays#sort(Object[], java.util.Comparator)
+ * @since 07.04.2003
  */
 public class OrderComparator implements Comparator<Object> {
-
+	
 	/**
-	 * Shared default instance of {@code OrderComparator}.
+	 * 共享的默认实例{@code OrderComparator}.
 	 */
 	public static final OrderComparator INSTANCE = new OrderComparator();
-
-
+	
 	/**
-	 * Build an adapted order comparator with the given source provider.
+	 * 使用给定的源提供者构建一个适应的顺序比较器。.
 	 * @param sourceProvider the order source provider to use
 	 * @return the adapted comparator
 	 * @since 4.1
@@ -67,27 +65,26 @@ public class OrderComparator implements Comparator<Object> {
 	public Comparator<Object> withSourceProvider(OrderSourceProvider sourceProvider) {
 		return (o1, o2) -> doCompare(o1, o2, sourceProvider);
 	}
-
+	
 	@Override
 	public int compare(@Nullable Object o1, @Nullable Object o2) {
 		return doCompare(o1, o2, null);
 	}
-
+	
 	private int doCompare(@Nullable Object o1, @Nullable Object o2, @Nullable OrderSourceProvider sourceProvider) {
 		boolean p1 = (o1 instanceof PriorityOrdered);
 		boolean p2 = (o2 instanceof PriorityOrdered);
 		if (p1 && !p2) {
 			return -1;
-		}
-		else if (p2 && !p1) {
+		} else if (p2 && !p1) {
 			return 1;
 		}
-
+		
 		int i1 = getOrder(o1, sourceProvider);
 		int i2 = getOrder(o2, sourceProvider);
 		return Integer.compare(i1, i2);
 	}
-
+	
 	/**
 	 * Determine the order value for the given object.
 	 * <p>The default implementation checks against the given {@link OrderSourceProvider}
@@ -108,15 +105,14 @@ public class OrderComparator implements Comparator<Object> {
 							break;
 						}
 					}
-				}
-				else {
+				} else {
 					order = findOrder(orderSource);
 				}
 			}
 		}
 		return (order != null ? order : getOrder(obj));
 	}
-
+	
 	/**
 	 * Determine the order value for the given object.
 	 * <p>The default implementation checks against the {@link Ordered} interface
@@ -133,7 +129,7 @@ public class OrderComparator implements Comparator<Object> {
 		}
 		return Ordered.LOWEST_PRECEDENCE;
 	}
-
+	
 	/**
 	 * Find an order value indicated by the given object.
 	 * <p>The default implementation checks against the {@link Ordered} interface.
@@ -145,7 +141,7 @@ public class OrderComparator implements Comparator<Object> {
 	protected Integer findOrder(Object obj) {
 		return (obj instanceof Ordered ? ((Ordered) obj).getOrder() : null);
 	}
-
+	
 	/**
 	 * Determine a priority value for the given object, if any.
 	 * <p>The default implementation always returns {@code null}.
@@ -161,8 +157,7 @@ public class OrderComparator implements Comparator<Object> {
 	public Integer getPriority(Object obj) {
 		return null;
 	}
-
-
+	
 	/**
 	 * Sort the given List with a default OrderComparator.
 	 * <p>Optimized to skip sorting for lists with size 0 or 1,
@@ -175,7 +170,7 @@ public class OrderComparator implements Comparator<Object> {
 			list.sort(INSTANCE);
 		}
 	}
-
+	
 	/**
 	 * Sort the given array with a default OrderComparator.
 	 * <p>Optimized to skip sorting for lists with size 0 or 1,
@@ -188,7 +183,7 @@ public class OrderComparator implements Comparator<Object> {
 			Arrays.sort(array, INSTANCE);
 		}
 	}
-
+	
 	/**
 	 * Sort the given array or List with a default OrderComparator,
 	 * if necessary. Simply skips sorting when given any other value.
@@ -200,20 +195,18 @@ public class OrderComparator implements Comparator<Object> {
 	public static void sortIfNecessary(Object value) {
 		if (value instanceof Object[]) {
 			sort((Object[]) value);
-		}
-		else if (value instanceof List) {
+		} else if (value instanceof List) {
 			sort((List<?>) value);
 		}
 	}
-
-
+	
 	/**
 	 * Strategy interface to provide an order source for a given object.
 	 * @since 4.1
 	 */
 	@FunctionalInterface
 	public interface OrderSourceProvider {
-
+		
 		/**
 		 * Return an order source for the specified object, i.e. an object that
 		 * should be checked for an order value as a replacement to the given object.
@@ -226,5 +219,5 @@ public class OrderComparator implements Comparator<Object> {
 		@Nullable
 		Object getOrderSource(Object obj);
 	}
-
+	
 }

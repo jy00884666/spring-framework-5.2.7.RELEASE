@@ -173,6 +173,9 @@ class ConfigurationClassParser {
 			try {
 				// 注解类型
 				if (bd instanceof AnnotatedBeanDefinition) {
+					// 解析注解对象,并且把解析出来的bd放到map,但是这里的bd指的是普通的
+					// 何谓不普通的呢?比如 @Bean和各种 beanFactoryPostProcessor得到的bean不在这里put
+					// 但是是这里解析,只是不put而已
 					parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName());
 				} else if (bd instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) bd).hasBeanClass()) {
 					// 有class对象

@@ -258,16 +258,33 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 * {@link Configuration} classes.
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
+		// 定义一个list存放app提供的bd (项目当中提供了@Compent)
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
+		// 获取容器中注册的所有bd名字7个由于配置类是手动注册的所以也能拿到
 		String[] candidateNames = registry.getBeanDefinitionNames();
-		
+		/**
+		 * 开始扫描,就是把类信息拿出来然后构建成为BeanDefinition对象
+		 * 然后把这个BeanDerinition对象放到集合当中,但是在没有完成扫描之前这个map当中已经有七个BeanDefinition
+		 * 这个地方他就要去判断你的注解类是否要加代理
+		 */
 		for (String beanName : candidateNames) {
 			BeanDefinition beanDef = registry.getBeanDefinition(beanName);
 			if (beanDef.getAttribute(ConfigurationClassUtils.CONFIGURATION_CLASS_ATTRIBUTE) != null) {
+				// 如果BeanDefinition中的configurationClass属性为full或者lite,则意味着已经处理过了,直接跳过
+				// 这里需要结合下面的代码才能理解
 				if (logger.isDebugEnabled()) {
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
 				}
+				/**
+				 * 判断是否是Configuration类,如果加了Configuration下面的这几个注解就不再判断了
+				 * 还有 add (Component. class. getName ());
+				 * 		candidatelndicators.add(ComponentScan. class. getName();
+				 * 		candidatelndicators.add(1mport.class. getName());
+				 * 		candidatelndicators.add(ImportResource.class. getName());
+				 * 	beanDef = appconfig
+				 */
 			} else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
+				// BeanDefinitionHolder也可以看成一个数据结构
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
 			}
 		}
@@ -277,14 +294,15 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			return;
 		}
 		
-		// Sort by previously determined @Order value, if applicable
+		// 排序,根据order, 不重要
 		configCandidates.sort((bd1, bd2) -> {
 			int i1 = ConfigurationClassUtils.getOrder(bd1.getBeanDefinition());
 			int i2 = ConfigurationClassUtils.getOrder(bd2.getBeanDefinition());
 			return Integer.compare(i1, i2);
 		});
 		
-		// Detect any custom bean name generation strategy supplied through the enclosing application context
+		// 如果BeanDefinitionRegistry是SingletonBeanRegistry子类的话
+		// 由于我们当前传入的是DefaultListableBeanFactory,是SingletonBeanRegistry的子类因此会将registry强转为SingletonBeanRegistry
 		SingletonBeanRegistry sbr = null;
 		if (registry instanceof SingletonBeanRegistry) {
 			sbr = (SingletonBeanRegistry) registry;
