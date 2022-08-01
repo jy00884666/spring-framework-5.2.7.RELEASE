@@ -33,7 +33,7 @@ import org.springframework.util.StringValueResolver;
 /**
  * Simple implementation of the {@link AliasRegistry} interface.
  * <p>Serves as base class for
- * {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
+ * {@link# org.springframework.beans.factory.support.BeanDefinitionRegistry}
  * implementations.
  * @author Juergen Hoeller
  * @author Qimiao Chen

@@ -314,7 +314,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	@Override
 	public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
 		if (bean != null) {
-			// 获取缓存key
+			/**获取缓存key,如果beanName不为空,则以beanName为key,
+			 * 如果为FactoryBean类型,前面还会添加 & 符号,如果beanName为空,则以当前bean对应的class为key */
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
 			/**
 			 * earlyProxyReferences 中存放的是那些提前进行了 aop 的 Bean
@@ -350,7 +351,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 	
 	/**
-	 * 如果符合被代理的条件，包装给定的 bean。
+	 * 先判断是否已经处理过,是否需要要跳过,跳过的话直按就放进 advisedBeans 里,表示不进行代理,如果这个bean处理过了,获取通知拦截器,然后开始进行代理
 	 * @param bean     the raw bean instance
 	 * @param beanName the name of the bean
 	 * @param cacheKey the cache key for metadata access
@@ -361,12 +362,13 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
 			return bean;
 		}
-		// 不需要增强
+		// 这里 advisedBeans 缓存了已经进行了代理的bean,如果缓存中存在, 则不需要增强
 		if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
 			return bean;
 		}
-		// 是否是基础的 Bean || 是否需要跳过
+		// 是否是Spring系统自带的Bean || shouldSkip()是否需要跳过
 		if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
+			// 对当前bean进行缓存
 			this.advisedBeans.put(cacheKey, Boolean.FALSE);
 			return bean;
 		}

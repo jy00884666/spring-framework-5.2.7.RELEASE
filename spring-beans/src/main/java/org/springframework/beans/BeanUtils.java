@@ -111,8 +111,7 @@ public abstract class BeanUtils {
 	}
 	
 	/**
-	 * 使用“primary”构造函数实例化一个类(对于Kotlin类，
-	 * 可能声明默认实参)或其默认构造函数
+	 * 使用 primary 构造函数实例化一个类(对于 Kotlin 类可能声明默认实参)或其默认构造函数
 	 * (对于常规的Java类，期望一个标准的无参数设置)。
 	 * <p>注意，此方法试图设置可访问的构造函数
 	 * 如果给定一个不可访问的(即非公共的)构造函数。
@@ -183,6 +182,7 @@ public abstract class BeanUtils {
 				return KotlinDelegate.instantiateClass(ctor, args);
 			} else {
 				Class<?>[] parameterTypes = ctor.getParameterTypes();
+				// 不能指定比构造函数参数更多的参数
 				Assert.isTrue(args.length <= parameterTypes.length,
 						"Can't specify more arguments than constructor parameters");
 				Object[] argsWithDefaultValues = new Object[args.length];
@@ -195,15 +195,20 @@ public abstract class BeanUtils {
 						argsWithDefaultValues[i] = args[i];
 					}
 				}
+				// 创建对象
 				return ctor.newInstance(argsWithDefaultValues);
 			}
 		} catch (InstantiationException ex) {
+			// 它是抽象类吗?
 			throw new BeanInstantiationException(ctor, "Is it an abstract class?", ex);
 		} catch (IllegalAccessException ex) {
+			// 构造函数可访问吗?
 			throw new BeanInstantiationException(ctor, "Is the constructor accessible?", ex);
 		} catch (IllegalArgumentException ex) {
+			// 构造函数的非法参数
 			throw new BeanInstantiationException(ctor, "Illegal arguments for constructor", ex);
 		} catch (InvocationTargetException ex) {
+			// 构造函数 异常
 			throw new BeanInstantiationException(ctor, "Constructor threw exception", ex.getTargetException());
 		}
 	}

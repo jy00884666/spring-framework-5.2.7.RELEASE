@@ -16,16 +16,6 @@
 
 package org.springframework.beans.factory.support;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanCreationNotAllowedException;
 import org.springframework.beans.factory.BeanCurrentlyInCreationException;
@@ -36,6 +26,16 @@ import org.springframework.core.SimpleAliasRegistry;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Generic registry for shared bean instances, implementing the
@@ -254,21 +254,28 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		synchronized (this.singletonObjects) {
 			// <1>尝试从单例缓存池中获取对象
 			Object singletonObject = this.singletonObjects.get(beanName);
+			// 如果缓存中单例对象获取不到
 			if (singletonObject == null) {
+				// 如果当前在 destorySingletons 中
 				if (this.singletonsCurrentlyInDestruction) {
 					throw new BeanCreationNotAllowedException(beanName,
 							"Singleton bean creation not allowed while singletons of this factory are in destruction" +
 									" " +
 									"(Do not request a bean from a BeanFactory in a destroy method implementation!)");
 				}
+				// 如果当前日志级别时调试
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
 				// <2>将bean添加到当前正在创建集合中(singletonsCurrentlyInCreation)
 				beforeSingletonCreation(beanName);
+				// 表示生成了新的单例对象的标记,默认为faLse,表示没有生成新的单例对象
 				boolean newSingleton = false;
+				// 抑制异常记录标记,没有时没true,否则为false
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
+				// 如果没有抑制异常记录
 				if (recordSuppressedExceptions) {
+					// 对抑制的异常列表进行实例化(LinkedHashSet)
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
@@ -276,25 +283,33 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				} catch (IllegalStateException ex) {
-					// 回调singletonObjects的get方法,进行正在创建的Bean逻辑
+					// 回调 singletonObjects 的get方法,进行正在创建的Bean逻辑
 					singletonObject = this.singletonObjects.get(beanName);
+					// 如果获取失败,抛出异常
 					if (singletonObject == null) {
 						throw ex;
 					}
 				} catch (BeanCreationException ex) {
+					// 如果没有抑制异常记录
 					if (recordSuppressedExceptions) {
+						// 遍历抑制的异常列表
 						for (Exception suppressedException : this.suppressedExceptions) {
+							// 将抑制的异常对象添加到bean创建异常中,这样做的,就是相当于,因XXX异常导致了Bean创建异常,的说法
 							ex.addRelatedCause(suppressedException);
 						}
 					}
 					throw ex;
 				} finally {
+					// 如果没有抑制异常记录
 					if (recordSuppressedExceptions) {
+						/**将抑制的异常列表置为nulL,因为 suppressedExceptions 是对应单个bean的异常记录,置为null
+						 * 可防止异常信息的混乱*/
 						this.suppressedExceptions = null;
 					}
 					// <4>后置处理,将bean从当前正在创建中集合中移除(singletonsCurrentlyInCreation)
 					afterSingletonCreation(beanName);
 				}
+				// 生成了新的单例对象
 				if (newSingleton) {
 					// <5>加入缓存
 					addSingleton(beanName, singletonObject);
