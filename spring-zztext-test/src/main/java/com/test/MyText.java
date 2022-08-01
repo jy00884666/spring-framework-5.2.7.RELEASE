@@ -9,11 +9,10 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 public class MyText {
 	
 	public static void main(String[] args) {
-		
+		// 创建Spring容器
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Person.class);
-		
+		// 获取对象Bean
 		Person person = (Person) context.getBean("person");
-		
 		System.out.println("person:" + person);
 	}
 	
