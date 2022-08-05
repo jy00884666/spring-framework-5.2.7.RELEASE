@@ -16,30 +16,8 @@
 
 package org.springframework.web.servlet;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -64,6 +42,26 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.util.NestedServletException;
 import org.springframework.web.util.WebUtils;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Central dispatcher for HTTP request handlers/controllers, e.g. for web UI controllers
@@ -531,18 +529,28 @@ public class DispatcherServlet extends FrameworkServlet {
 	}
 	
 	/**
-	 * Initialize the strategy objects that this servlet uses.
-	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
+	 * 初始化这个servlet使用的策略对象。
+	 * <p>可能在子类中被重写，以便初始化进一步的策略对象。
+	 * SpringMVC 9大组件
 	 */
 	protected void initStrategies(ApplicationContext context) {
+		// 多文件上传组件
 		initMultipartResolver(context);
+		// 初始化本地语言环境
 		initLocaleResolver(context);
+		// 初始化模板处理器
 		initThemeResolver(context);
+		// HandlerMapping 保存Url映射关系
 		initHandlerMappings(context);
+		// 初始化参数适配器
 		initHandlerAdapters(context);
+		// 初始化异常拦截器
 		initHandlerExceptionResolvers(context);
+		// 初始化视图预处理器
 		initRequestToViewNameTranslator(context);
+		// 初始化视图转换器
 		initViewResolvers(context);
+		// 参数管理器也叫闪存管理器 与struts2中的ValueStack值栈一样,值范围在 page->request->session->applicationContext存储
 		initFlashMapManager(context);
 	}
 	
@@ -1019,7 +1027,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			Exception dispatchException = null;
 			
 			try {
-				// 检查request对象判断请求是不是文件上传的请求
+				// 1.检查request对象判断请求是不是文件上传的请求
 				processedRequest = checkMultipart(request);
 				/**
 				 * 判断是不是文件上传的请求若是的话返回 processedRequest是 MultipartHttpServletRequest
@@ -1028,17 +1036,20 @@ public class DispatcherServlet extends FrameworkServlet {
 				multipartRequestParsed = (processedRequest != request);
 				
 				/**
-				 * 从当前的请求中推断出 HandlerExecutechain 处理器执行链对象
+				 * 2.从当前的请求中推断出 HandlerExecutechain 处理器执行链对象
 				 * 【重点：需要去看是如何推断的】
+				 * 第一个步骤的意义就在这里体现了,这里并不是直接返回controller,而是返回的
+				 * HandlerExecutionChain请求处理器链对象,该对象封装Thandler 和interceptors.
 				 * */
 				mappedHandler = getHandler(processedRequest);
+				// 如果handler为空则返回404
 				if (mappedHandler == null) {
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 				
 				/**
-				 * 根据 Handler选择 AHandlerAdpater对象
+				 * 3.根据 Handler选择 AHandlerAdpater对象
 				 * 默认是 @RequestMappingHandlerAdapter对象
 				 */
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
@@ -1057,15 +1068,15 @@ public class DispatcherServlet extends FrameworkServlet {
 					return;
 				}
 				
-				// 实际上调用处理程序
+				// 4.实际上调用处理程序
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 				
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
-				
+				// 结果试图对象的处理
 				applyDefaultViewName(processedRequest, mv);
-				// 出发拦截器的 post方法
+				// 触发拦截器的 post方法
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			} catch (Exception ex) {
 				dispatchException = ex;
