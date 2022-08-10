@@ -226,7 +226,7 @@ class ConfigurationClassParser {
 	
 	protected void processConfigurationClass(ConfigurationClass configClass, Predicate<String> filter)
 			throws IOException {
-		// 判断是否跳过解析
+		// 判断是否跳过解析,就是看有没有类上是否有@Conditional注解,如果有,则进行条件匹配
 		if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
 			return;
 		}
@@ -926,6 +926,7 @@ class ConfigurationClassParser {
 	/**
 	 * Simple wrapper that allows annotated source classes to be dealt with
 	 * in a uniform manner, regardless of how they are loaded.
+	 * 简单的包装，允许以统一的方式处理带注释的源类，而不管它们是如何加载的。
 	 */
 	private class SourceClass implements Ordered {
 		

@@ -127,6 +127,7 @@ final class PostProcessorRegistrationDelegate {
 			currentRegistryProcessors.clear();
 			
 			// Finally, invoke all other BeanDefinitionRegistryPostProcessors until no further ones appear.
+			/*最后，调用所有其他BeanDefinitionRegistryPostProcessors函数，直到不再出现其他BeanDefinitionRegistryPostProcessors函数。*/
 			boolean reiterate = true;
 			while (reiterate) {
 				reiterate = false;
@@ -147,6 +148,7 @@ final class PostProcessorRegistrationDelegate {
 			}
 			
 			// Now, invoke the postProcessBeanFactory callback of all processors handled so far.
+			/*现在，调用到目前为止处理的所有处理器的postProcessBeanFactory回调。*/
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
 		} else {

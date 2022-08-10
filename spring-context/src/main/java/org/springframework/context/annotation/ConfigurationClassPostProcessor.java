@@ -1,19 +1,15 @@
 /*
- * Copyright 2002-2020 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 2002-2020年版权归原作者或作者所有。
+ * 根据Apache许可证，2.0版本(“许可证”)授权;
+ * 除非符合许可证，否则您不能使用此文件。
+ * 你可于下列网址索取许可证副本
+ * https://www.apache.org/licenses/license - 2.0
+ * 除非适用法律要求或书面同意，软件
+ * 根据本许可发布的是“按现状”发布的，
+ * 无任何明示或默示的保证或条件。
+ * 请参阅许可证的具体语言控制权限和
+ * 许可证下的限制。“5
  */
-
 package org.springframework.context.annotation;
 
 import org.apache.commons.logging.Log;
@@ -214,6 +210,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	
 	/**
 	 * Derive further bean definitions from the configuration classes in the registry.
+	 * 从注册中心中的配置类进一步派生bean定义
 	 */
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
@@ -227,7 +224,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 					"postProcessBeanFactory already called on this post-processor against " + registry);
 		}
 		this.registriesPostProcessed.add(registryId);
-		
+		// 重点 解析配置类
 		processConfigBeanDefinitions(registry);
 	}
 	
@@ -246,6 +243,8 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		if (!this.registriesPostProcessed.contains(factoryId)) {
 			// BeanDefinitionRegistryPostProcessor hook apparently not supported...
 			// Simply call processConfigurationClasses lazily at this point then.
+			/*BeanDefinitionRegistryPostProcessor钩子显然不支持…
+			 *此时只需惰性地调用processConfigurationCLasses。*/
 			processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);
 		}
 		
@@ -294,7 +293,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			return;
 		}
 		
-		// 排序,根据order, 不重要
+		// 排序,根据order, 越小越靠前,不重要
 		configCandidates.sort((bd1, bd2) -> {
 			int i1 = ConfigurationClassUtils.getOrder(bd1.getBeanDefinition());
 			int i2 = ConfigurationClassUtils.getOrder(bd2.getBeanDefinition());

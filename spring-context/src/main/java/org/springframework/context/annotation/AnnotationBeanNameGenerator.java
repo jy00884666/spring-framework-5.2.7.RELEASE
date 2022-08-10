@@ -16,12 +16,6 @@
 
 package org.springframework.context.annotation;
 
-import java.beans.Introspector;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -32,6 +26,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
+import java.beans.Introspector;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * {@link BeanNameGenerator} implementation for bean classes annotated with the
@@ -48,36 +48,36 @@ import org.springframework.util.StringUtils;
  * <p>If the annotation's value doesn't indicate a bean name, an appropriate
  * name will be built based on the short name of the class (with the first
  * letter lower-cased). For example:
+ * <p>如果注释的值没有表示bean名称，则将基于类的短名称(第一个*字母小写)构建一个适当的名称。例如:
  *
  * <pre class="code">com.xyz.FooServiceImpl -&gt; fooServiceImpl</pre>
- *
  * @author Juergen Hoeller
  * @author Mark Fisher
- * @since 2.5
  * @see org.springframework.stereotype.Component#value()
  * @see org.springframework.stereotype.Repository#value()
  * @see org.springframework.stereotype.Service#value()
  * @see org.springframework.stereotype.Controller#value()
  * @see javax.inject.Named#value()
  * @see FullyQualifiedAnnotationBeanNameGenerator
+ * @since 2.5
  */
 public class AnnotationBeanNameGenerator implements BeanNameGenerator {
-
+	
 	/**
 	 * A convenient constant for a default {@code AnnotationBeanNameGenerator} instance,
 	 * as used for component scanning purposes.
 	 * @since 5.2
 	 */
 	public static final AnnotationBeanNameGenerator INSTANCE = new AnnotationBeanNameGenerator();
-
+	
 	private static final String COMPONENT_ANNOTATION_CLASSNAME = "org.springframework.stereotype.Component";
-
+	
 	private final Map<String, Set<String>> metaAnnotationTypesCache = new ConcurrentHashMap<>();
-
-
+	
 	@Override
 	public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
 		if (definition instanceof AnnotatedBeanDefinition) {
+			// 获取注解所指定的 beanName
 			String beanName = determineBeanNameFromAnnotation((AnnotatedBeanDefinition) definition);
 			if (StringUtils.hasText(beanName)) {
 				// Explicit bean name found.
@@ -87,7 +87,7 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 		// Fallback: generate a unique default bean name.
 		return buildDefaultBeanName(definition, registry);
 	}
-
+	
 	/**
 	 * Derive a bean name from one of the annotations on the class.
 	 * @param annotatedDef the annotation-aware bean definition
@@ -122,37 +122,38 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 		}
 		return beanName;
 	}
-
+	
 	/**
 	 * Check whether the given annotation is a stereotype that is allowed
 	 * to suggest a component name through its annotation {@code value()}.
-	 * @param annotationType the name of the annotation class to check
+	 * @param annotationType      the name of the annotation class to check
 	 * @param metaAnnotationTypes the names of meta-annotations on the given annotation
-	 * @param attributes the map of attributes for the given annotation
+	 * @param attributes          the map of attributes for the given annotation
 	 * @return whether the annotation qualifies as a stereotype with component name
 	 */
 	protected boolean isStereotypeWithNameValue(String annotationType,
-			Set<String> metaAnnotationTypes, @Nullable Map<String, Object> attributes) {
-
+												Set<String> metaAnnotationTypes,
+												@Nullable Map<String, Object> attributes) {
+		
 		boolean isStereotype = annotationType.equals(COMPONENT_ANNOTATION_CLASSNAME) ||
 				metaAnnotationTypes.contains(COMPONENT_ANNOTATION_CLASSNAME) ||
 				annotationType.equals("javax.annotation.ManagedBean") ||
 				annotationType.equals("javax.inject.Named");
-
+		
 		return (isStereotype && attributes != null && attributes.containsKey("value"));
 	}
-
+	
 	/**
 	 * Derive a default bean name from the given bean definition.
 	 * <p>The default implementation delegates to {@link #buildDefaultBeanName(BeanDefinition)}.
 	 * @param definition the bean definition to build a bean name for
-	 * @param registry the registry that the given bean definition is being registered with
+	 * @param registry   the registry that the given bean definition is being registered with
 	 * @return the default bean name (never {@code null})
 	 */
 	protected String buildDefaultBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
 		return buildDefaultBeanName(definition);
 	}
-
+	
 	/**
 	 * Derive a default bean name from the given bean definition.
 	 * <p>The default implementation simply builds a decapitalized version
@@ -160,14 +161,21 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	 * <p>Note that inner classes will thus have names of the form
 	 * "outerClassName.InnerClassName", which because of the period in the
 	 * name may be an issue if you are autowiring by name.
+	 * 从给定的bean定义派生默认bean名称。默认的实现只构建了短类名的非大写版本:“mypackage。MyJdbcDao”——>“MyJdbcDao”。
+	 * 注意，内部类因此将具有形式为“outerCLassName.InnerCLassName”，
+	 * 这是因为在名称中的句号可能是一个问题，如果你是根据名称自动装配。
+	 *
 	 * @param definition the bean definition to build a bean name for
 	 * @return the default bean name (never {@code null})
 	 */
 	protected String buildDefaultBeanName(BeanDefinition definition) {
+		// 获取类名,例如:com.XXX.Text
 		String beanClassName = definition.getBeanClassName();
 		Assert.state(beanClassName != null, "No bean class name set");
+		// 获取类短名,例如:Text
 		String shortClassName = ClassUtils.getShortName(beanClassName);
+		// 类短名首字母小写,作为 BeanDefinition 的默认名称
 		return Introspector.decapitalize(shortClassName);
 	}
-
+	
 }

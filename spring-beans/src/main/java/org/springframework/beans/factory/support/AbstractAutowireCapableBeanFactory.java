@@ -16,29 +16,7 @@
 
 package org.springframework.beans.factory.support;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
-
 import org.apache.commons.logging.Log;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -83,6 +61,27 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ReflectionUtils.MethodCallback;
 import org.springframework.util.StringUtils;
+
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 /**
  * Abstract bean factory superclass that implements default bean creation,
@@ -570,7 +569,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		BeanWrapper instanceWrapper = null;
 		// 获取 factoryBean 实例缓存,如果是单例对象
 		if (mbd.isSingleton()) {
-			// 从未完成FactoryBean中移除
+			// 从未完成FactoryBean中移除,因为有可能在本Bean创建之前,就有其他Bean把当前Bean给创建出来了(比如依赖注入过程中)
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		// 没有就创建实例
@@ -587,7 +586,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			mbd.resolvedTargetType = beanType;
 		}
 		
-		// 允许后处理器修改合并的bean定义。
+		// 允许后置处理器修改合并的bean定义。
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
@@ -1864,6 +1863,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		
 		Object wrappedBean = bean;
+		// 1.初始化前
 		// 如果mdb不为nulL || mbd不是"synthetic",一般是指只有AOP相关的 prointcut 配置或者 Advice 配置才会将 synthetic 设置为 true
 		if (mbd == null || !mbd.isSynthetic()) {
 			// 调用后置处理器的 PostProcessorsBeforeInitialization 方法,@PostCust注解的方法
@@ -1871,7 +1871,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			 * 返回的 Bean 实例可能是原始 Bean的包装器。*/
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
-		
+		// 2.初始化
 		try {
 			// 调用初始化方法,先调用bean的InitializingBean接口方法,后调用bean的自定义初始化方法
 			invokeInitMethods(beanName, wrappedBean, mbd);
@@ -1881,6 +1881,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					(mbd != null ? mbd.getResourceDescription() : null),
 					beanName, "Invocation of init method failed", ex);
 		}
+		// 3.初始化后
 		// 如果mbd为null || mbd不是"synthetic"
 		if (mbd == null || !mbd.isSynthetic()) {
 			// 调用后置处理器的 PostProcessorsAfterInitialization 方法,生成AOP代理对象
@@ -1961,10 +1962,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 	
 	/**
-	 * Invoke the specified custom init method on the given bean.
-	 * Called by invokeInitMethods.
-	 * <p>Can be overridden in subclasses for custom resolution of init
-	 * methods with arguments.
+	 * 在给定bean上调用指定的自定义初始化方法。叫invokeInitMethods。
+	 * 可以在子类中重写，用于自定义带有参数的init方法解析。
 	 * @see #invokeInitMethods
 	 */
 	protected void invokeCustomInitMethod(String beanName, final Object bean, RootBeanDefinition mbd)

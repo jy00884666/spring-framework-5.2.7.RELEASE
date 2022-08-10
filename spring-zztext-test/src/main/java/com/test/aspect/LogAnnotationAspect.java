@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /*日志切面类*/
-@Component // 注入依赖
+@Component // 注入依赖,也是声明配置类
 @Aspect // 定义切面类
 public class LogAnnotationAspect {
 	

@@ -16,14 +16,6 @@
 
 package org.springframework.context.annotation;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -42,57 +34,69 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 /**
  * Parser for the @{@link ComponentScan} annotation.
- *
  * @author Chris Beams
  * @author Juergen Hoeller
  * @author Sam Brannen
- * @since 3.1
  * @see ClassPathBeanDefinitionScanner#scan(String...)
  * @see ComponentScanBeanDefinitionParser
+ * @since 3.1
  */
 class ComponentScanAnnotationParser {
-
+	
 	private final Environment environment;
-
+	
 	private final ResourceLoader resourceLoader;
-
+	
 	private final BeanNameGenerator beanNameGenerator;
-
+	
 	private final BeanDefinitionRegistry registry;
-
-
+	
 	public ComponentScanAnnotationParser(Environment environment, ResourceLoader resourceLoader,
-			BeanNameGenerator beanNameGenerator, BeanDefinitionRegistry registry) {
-
+										 BeanNameGenerator beanNameGenerator, BeanDefinitionRegistry registry) {
+		
 		this.environment = environment;
 		this.resourceLoader = resourceLoader;
 		this.beanNameGenerator = beanNameGenerator;
 		this.registry = registry;
 	}
-
-
+	
+	/**
+	 *
+	 * @param componentScan 表示@ComponentScan注解的属性值
+	 * @param declaringClass 表示@ComponentScan注解所在的类
+	 * @return
+	 */
 	public Set<BeanDefinitionHolder> parse(AnnotationAttributes componentScan, final String declaringClass) {
+		// this.registry 表示Spring容器,因为doScan方法中扫描得出的 BeanDefinition 需要注册入容器中
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(this.registry,
 				componentScan.getBoolean("useDefaultFilters"), this.environment, this.resourceLoader);
-
+		// 判断@ComponentScan注解中的nameGenerator=""属性值是否是默认值BeanNameGenerator.class
 		Class<? extends BeanNameGenerator> generatorClass = componentScan.getClass("nameGenerator");
 		boolean useInheritedGenerator = (BeanNameGenerator.class == generatorClass);
+		// 如果是默认值则赋值AnnotationBeanNameGenerato
 		scanner.setBeanNameGenerator(useInheritedGenerator ? this.beanNameGenerator :
 				BeanUtils.instantiateClass(generatorClass));
-
+		
 		ScopedProxyMode scopedProxyMode = componentScan.getEnum("scopedProxy");
 		if (scopedProxyMode != ScopedProxyMode.DEFAULT) {
 			scanner.setScopedProxyMode(scopedProxyMode);
-		}
-		else {
+		} else {
 			Class<? extends ScopeMetadataResolver> resolverClass = componentScan.getClass("scopeResolver");
 			scanner.setScopeMetadataResolver(BeanUtils.instantiateClass(resolverClass));
 		}
-
+		
 		scanner.setResourcePattern(componentScan.getString("resourcePattern"));
-
+		
 		for (AnnotationAttributes filter : componentScan.getAnnotationArray("includeFilters")) {
 			for (TypeFilter typeFilter : typeFiltersFor(filter)) {
 				scanner.addIncludeFilter(typeFilter);
@@ -103,12 +107,12 @@ class ComponentScanAnnotationParser {
 				scanner.addExcludeFilter(typeFilter);
 			}
 		}
-
+		
 		boolean lazyInit = componentScan.getBoolean("lazyInit");
 		if (lazyInit) {
 			scanner.getBeanDefinitionDefaults().setLazyInit(true);
 		}
-
+		
 		Set<String> basePackages = new LinkedHashSet<>();
 		String[] basePackagesArray = componentScan.getStringArray("basePackages");
 		for (String pkg : basePackagesArray) {
@@ -122,7 +126,7 @@ class ComponentScanAnnotationParser {
 		if (basePackages.isEmpty()) {
 			basePackages.add(ClassUtils.getPackageName(declaringClass));
 		}
-
+		
 		scanner.addExcludeFilter(new AbstractTypeHierarchyTraversingFilter(false, false) {
 			@Override
 			protected boolean matchClassName(String className) {
@@ -131,11 +135,11 @@ class ComponentScanAnnotationParser {
 		});
 		return scanner.doScan(StringUtils.toStringArray(basePackages));
 	}
-
+	
 	private List<TypeFilter> typeFiltersFor(AnnotationAttributes filterAttributes) {
 		List<TypeFilter> typeFilters = new ArrayList<>();
 		FilterType filterType = filterAttributes.getEnum("type");
-
+		
 		for (Class<?> filterClass : filterAttributes.getClassArray("classes")) {
 			switch (filterType) {
 				case ANNOTATION:
@@ -151,7 +155,7 @@ class ComponentScanAnnotationParser {
 				case CUSTOM:
 					Assert.isAssignable(TypeFilter.class, filterClass,
 							"@ComponentScan CUSTOM type filter requires a TypeFilter implementation");
-
+					
 					TypeFilter filter = ParserStrategyUtils.instantiateClass(filterClass, TypeFilter.class,
 							this.environment, this.resourceLoader, this.registry);
 					typeFilters.add(filter);
@@ -160,7 +164,7 @@ class ComponentScanAnnotationParser {
 					throw new IllegalArgumentException("Filter type not supported with Class value: " + filterType);
 			}
 		}
-
+		
 		for (String expression : filterAttributes.getStringArray("pattern")) {
 			switch (filterType) {
 				case ASPECTJ:
@@ -173,8 +177,8 @@ class ComponentScanAnnotationParser {
 					throw new IllegalArgumentException("Filter type not supported with String pattern: " + filterType);
 			}
 		}
-
+		
 		return typeFilters;
 	}
-
+	
 }

@@ -16,6 +16,8 @@
 
 package org.springframework.util;
 
+import org.springframework.lang.Nullable;
+
 import java.beans.Introspector;
 import java.io.Closeable;
 import java.io.Externalizable;
@@ -39,8 +41,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
-
-import org.springframework.lang.Nullable;
 
 /**
  * Miscellaneous {@code java.lang.Class} utility methods.
@@ -938,6 +938,7 @@ public abstract class ClassUtils {
 	
 	/**
 	 * Get the class name without the qualified package name.
+	 * 获取不带限定包名的类名。
 	 * @param className the className to get the short name for
 	 * @return the class name of the class without the package name
 	 * @throws IllegalArgumentException if the className is empty
