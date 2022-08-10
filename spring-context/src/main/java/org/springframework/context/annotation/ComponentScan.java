@@ -16,16 +16,16 @@
 
 package org.springframework.context.annotation;
 
+import org.springframework.beans.factory.support.BeanNameGenerator;
+import org.springframework.core.annotation.AliasFor;
+import org.springframework.core.type.filter.TypeFilter;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.core.annotation.AliasFor;
-import org.springframework.core.type.filter.TypeFilter;
 
 /**
  * Configures component scanning directives for use with @{@link Configuration} classes.
@@ -45,19 +45,18 @@ import org.springframework.core.type.filter.TypeFilter;
  * {@code @ComponentScan} level would be ignored.
  *
  * <p>See {@link Configuration @Configuration}'s Javadoc for usage examples.
- *
  * @author Chris Beams
  * @author Juergen Hoeller
  * @author Sam Brannen
- * @since 3.1
  * @see Configuration
+ * @since 3.1
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
 @Repeatable(ComponentScans.class)
 public @interface ComponentScan {
-
+	
 	/**
 	 * Alias for {@link #basePackages}.
 	 * <p>Allows for more concise annotation declarations if no other attributes
@@ -66,7 +65,7 @@ public @interface ComponentScan {
 	 */
 	@AliasFor("basePackages")
 	String[] value() default {};
-
+	
 	/**
 	 * Base packages to scan for annotated components.
 	 * <p>{@link #value} is an alias for (and mutually exclusive with) this
@@ -76,7 +75,7 @@ public @interface ComponentScan {
 	 */
 	@AliasFor("value")
 	String[] basePackages() default {};
-
+	
 	/**
 	 * Type-safe alternative to {@link #basePackages} for specifying the packages
 	 * to scan for annotated components. The package of each class specified will be scanned.
@@ -84,7 +83,7 @@ public @interface ComponentScan {
 	 * that serves no purpose other than being referenced by this attribute.
 	 */
 	Class<?>[] basePackageClasses() default {};
-
+	
 	/**
 	 * The {@link BeanNameGenerator} class to be used for naming detected components
 	 * within the Spring container.
@@ -98,12 +97,12 @@ public @interface ComponentScan {
 	 * @see FullyQualifiedAnnotationBeanNameGenerator
 	 */
 	Class<? extends BeanNameGenerator> nameGenerator() default BeanNameGenerator.class;
-
+	
 	/**
 	 * The {@link ScopeMetadataResolver} to be used for resolving the scope of detected components.
 	 */
 	Class<? extends ScopeMetadataResolver> scopeResolver() default AnnotationScopeMetadataResolver.class;
-
+	
 	/**
 	 * Indicates whether proxies should be generated for detected components, which may be
 	 * necessary when using scopes in a proxy-style fashion.
@@ -113,20 +112,20 @@ public @interface ComponentScan {
 	 * @see ClassPathBeanDefinitionScanner#setScopedProxyMode(ScopedProxyMode)
 	 */
 	ScopedProxyMode scopedProxy() default ScopedProxyMode.DEFAULT;
-
+	
 	/**
 	 * Controls the class files eligible for component detection.
 	 * <p>Consider use of {@link #includeFilters} and {@link #excludeFilters}
 	 * for a more flexible approach.
 	 */
 	String resourcePattern() default ClassPathScanningCandidateComponentProvider.DEFAULT_RESOURCE_PATTERN;
-
+	
 	/**
 	 * Indicates whether automatic detection of classes annotated with {@code @Component}
 	 * {@code @Repository}, {@code @Service}, or {@code @Controller} should be enabled.
 	 */
 	boolean useDefaultFilters() default true;
-
+	
 	/**
 	 * Specifies which types are eligible for component scanning.
 	 * <p>Further narrows the set of candidate components from everything in {@link #basePackages}
@@ -138,21 +137,20 @@ public @interface ComponentScan {
 	 * @see #useDefaultFilters()
 	 */
 	Filter[] includeFilters() default {};
-
+	
 	/**
 	 * Specifies which types are not eligible for component scanning.
 	 * @see #resourcePattern
 	 */
 	Filter[] excludeFilters() default {};
-
+	
 	/**
 	 * Specify whether scanned beans should be registered for lazy initialization.
 	 * <p>Default is {@code false}; switch this to {@code true} when desired.
 	 * @since 4.1
 	 */
 	boolean lazyInit() default false;
-
-
+	
 	/**
 	 * Declares the type filter to be used as an {@linkplain ComponentScan#includeFilters
 	 * include filter} or {@linkplain ComponentScan#excludeFilters exclude filter}.
@@ -160,7 +158,7 @@ public @interface ComponentScan {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({})
 	@interface Filter {
-
+		
 		/**
 		 * The type of filter to use.
 		 * <p>Default is {@link FilterType#ANNOTATION}.
@@ -168,14 +166,14 @@ public @interface ComponentScan {
 		 * @see #pattern
 		 */
 		FilterType type() default FilterType.ANNOTATION;
-
+		
 		/**
 		 * Alias for {@link #classes}.
 		 * @see #classes
 		 */
 		@AliasFor("classes")
 		Class<?>[] value() default {};
-
+		
 		/**
 		 * The class or classes to use as the filter.
 		 * <p>The following table explains how the classes will be interpreted
@@ -202,13 +200,13 @@ public @interface ComponentScan {
 		 * </ul>
 		 * <p>Specifying zero classes is permitted but will have no effect on component
 		 * scanning.
-		 * @since 4.2
 		 * @see #value
 		 * @see #type
+		 * @since 4.2
 		 */
 		@AliasFor("value")
 		Class<?>[] classes() default {};
-
+		
 		/**
 		 * The pattern (or patterns) to use for the filter, as an alternative
 		 * to specifying a Class {@link #value}.
@@ -220,7 +218,7 @@ public @interface ComponentScan {
 		 * @see #classes
 		 */
 		String[] pattern() default {};
-
+		
 	}
-
+	
 }

@@ -21,56 +21,59 @@ import org.springframework.lang.Nullable;
 /**
  * Interface that defines abstract metadata of a specific class,
  * in a form that does not require that class to be loaded yet.
- *
  * @author Juergen Hoeller
- * @since 2.5
  * @see StandardClassMetadata
  * @see org.springframework.core.type.classreading.MetadataReader#getClassMetadata()
  * @see AnnotationMetadata
+ * @since 2.5
  */
 public interface ClassMetadata {
-
+	
 	/**
 	 * Return the name of the underlying class.
 	 */
 	String getClassName();
-
+	
 	/**
 	 * Return whether the underlying class represents an interface.
 	 */
 	boolean isInterface();
-
+	
 	/**
 	 * Return whether the underlying class represents an annotation.
 	 * @since 4.1
 	 */
 	boolean isAnnotation();
-
+	
 	/**
 	 * Return whether the underlying class is marked as abstract.
+	 *
+	 * 返回底层类是否被标记为抽象类。
 	 */
 	boolean isAbstract();
-
+	
 	/**
 	 * Return whether the underlying class represents a concrete class,
 	 * i.e. neither an interface nor an abstract class.
+	 *
+	 * 返回底层类是否表示具体类，即既不是接口也不是抽象类。
 	 */
 	default boolean isConcrete() {
 		return !(isInterface() || isAbstract());
 	}
-
+	
 	/**
 	 * Return whether the underlying class is marked as 'final'.
 	 */
 	boolean isFinal();
-
+	
 	/**
 	 * Determine whether the underlying class is independent, i.e. whether
 	 * it is a top-level class or a nested class (static inner class) that
 	 * can be constructed independently from an enclosing class.
 	 */
 	boolean isIndependent();
-
+	
 	/**
 	 * Return whether the underlying class is declared within an enclosing
 	 * class (i.e. the underlying class is an inner/nested class or a
@@ -81,34 +84,34 @@ public interface ClassMetadata {
 	default boolean hasEnclosingClass() {
 		return (getEnclosingClassName() != null);
 	}
-
+	
 	/**
 	 * Return the name of the enclosing class of the underlying class,
 	 * or {@code null} if the underlying class is a top-level class.
 	 */
 	@Nullable
 	String getEnclosingClassName();
-
+	
 	/**
 	 * Return whether the underlying class has a super class.
 	 */
 	default boolean hasSuperClass() {
 		return (getSuperClassName() != null);
 	}
-
+	
 	/**
 	 * Return the name of the super class of the underlying class,
 	 * or {@code null} if there is no super class defined.
 	 */
 	@Nullable
 	String getSuperClassName();
-
+	
 	/**
 	 * Return the names of all interfaces that the underlying class
 	 * implements, or an empty array if there are none.
 	 */
 	String[] getInterfaceNames();
-
+	
 	/**
 	 * Return the names of all classes declared as members of the class represented by
 	 * this ClassMetadata object. This includes public, protected, default (package)
@@ -118,5 +121,5 @@ public interface ClassMetadata {
 	 * @since 3.1
 	 */
 	String[] getMemberClassNames();
-
+	
 }

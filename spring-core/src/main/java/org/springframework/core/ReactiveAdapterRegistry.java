@@ -16,6 +16,21 @@
 
 package org.springframework.core;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import kotlinx.coroutines.CompletableDeferredKt;
+import kotlinx.coroutines.Deferred;
+import org.reactivestreams.Publisher;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import reactor.blockhound.BlockHound;
+import reactor.blockhound.integration.BlockHoundIntegration;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import rx.RxReactiveStreams;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,22 +38,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
-
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import kotlinx.coroutines.CompletableDeferredKt;
-import kotlinx.coroutines.Deferred;
-import org.reactivestreams.Publisher;
-import reactor.blockhound.BlockHound;
-import reactor.blockhound.integration.BlockHoundIntegration;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import rx.RxReactiveStreams;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * A registry of adapters to adapt Reactive Streams {@link Publisher} to/from
@@ -48,7 +47,6 @@ import org.springframework.util.ReflectionUtils;
  * <p>By default, depending on classpath availability, adapters are registered
  * for Reactor, RxJava 1, RxJava 2 types, {@link CompletableFuture}, Java 9+
  * {@code Flow.Publisher} and Kotlin Coroutines {@code Deferred} and {@code Flow}.
- *
  * @author Rossen Stoyanchev
  * @author Sebastien Deleuze
  * @since 5.0
@@ -61,7 +59,6 @@ public class ReactiveAdapterRegistry {
 	private final boolean reactorPresent;
 
 	private final List<ReactiveAdapter> adapters = new ArrayList<>();
-
 
 	/**
 	 * Create a registry and auto-register default adapters.
@@ -102,7 +99,6 @@ public class ReactiveAdapterRegistry {
 		}
 	}
 
-
 	/**
 	 * Whether the registry has any adapters which would be the case if any of
 	 * Reactor, RxJava 2, or RxJava 1 (+ RxJava Reactive Streams bridge) are
@@ -118,12 +114,12 @@ public class ReactiveAdapterRegistry {
 	 * their input is neither {@code null} nor {@link Optional}.
 	 */
 	public void registerReactiveType(ReactiveTypeDescriptor descriptor,
-			Function<Object, Publisher<?>> toAdapter, Function<Publisher<?>, Object> fromAdapter) {
+									 Function<Object, Publisher<?>> toAdapter,
+									 Function<Publisher<?>, Object> fromAdapter) {
 
 		if (this.reactorPresent) {
 			this.adapters.add(new ReactorAdapter(descriptor, toAdapter, fromAdapter));
-		}
-		else {
+		} else {
 			this.adapters.add(new ReactiveAdapter(descriptor, toAdapter, fromAdapter));
 		}
 	}
@@ -141,9 +137,9 @@ public class ReactiveAdapterRegistry {
 	 * Get the adapter for the given reactive type. Or if a "source" object is
 	 * provided, its actual type is used instead.
 	 * @param reactiveType the reactive type
-	 * (may be {@code null} if a concrete source object is given)
-	 * @param source an instance of the reactive type
-	 * (i.e. to adapt from; may be {@code null} if the reactive type is specified)
+	 *                     (may be {@code null} if a concrete source object is given)
+	 * @param source       an instance of the reactive type
+	 *                     (i.e. to adapt from; may be {@code null} if the reactive type is specified)
 	 * @return the corresponding adapter, or {@code null} if none available
 	 */
 	@Nullable
@@ -170,7 +166,6 @@ public class ReactiveAdapterRegistry {
 		return null;
 	}
 
-
 	/**
 	 * Return a shared default {@code ReactiveAdapterRegistry} instance,
 	 * lazily building it once needed.
@@ -194,7 +189,6 @@ public class ReactiveAdapterRegistry {
 		}
 		return registry;
 	}
-
 
 	private static class ReactorRegistrar {
 
@@ -225,7 +219,6 @@ public class ReactiveAdapterRegistry {
 		}
 	}
 
-
 	private static class RxJava1Registrar {
 
 		void registerAdapters(ReactiveAdapterRegistry registry) {
@@ -246,7 +239,6 @@ public class ReactiveAdapterRegistry {
 			);
 		}
 	}
-
 
 	private static class RxJava2Registrar {
 
@@ -279,7 +271,6 @@ public class ReactiveAdapterRegistry {
 		}
 	}
 
-
 	private static class ReactorJdkFlowAdapterRegistrar {
 
 		void registerAdapter(ReactiveAdapterRegistry registry) {
@@ -290,7 +281,7 @@ public class ReactiveAdapterRegistry {
 				Class<?> publisherClass = ClassUtils.forName(publisherName, getClass().getClassLoader());
 
 				String adapterName = "reactor.adapter.JdkFlowAdapter";
-				Class<?> flowAdapterClass = ClassUtils.forName(adapterName,  getClass().getClassLoader());
+				Class<?> flowAdapterClass = ClassUtils.forName(adapterName, getClass().getClassLoader());
 
 				Method toFluxMethod = flowAdapterClass.getMethod("flowPublisherToFlux", publisherClass);
 				Method toFlowMethod = flowAdapterClass.getMethod("publisherToFlowPublisher", Publisher.class);
@@ -301,13 +292,11 @@ public class ReactiveAdapterRegistry {
 						source -> (Publisher<?>) ReflectionUtils.invokeMethod(toFluxMethod, null, source),
 						publisher -> ReflectionUtils.invokeMethod(toFlowMethod, null, publisher)
 				);
-			}
-			catch (Throwable ex) {
+			} catch (Throwable ex) {
 				// Ignore
 			}
 		}
 	}
-
 
 	/**
 	 * ReactiveAdapter variant that wraps adapted Publishers as {@link Flux} or
@@ -318,8 +307,8 @@ public class ReactiveAdapterRegistry {
 	private static class ReactorAdapter extends ReactiveAdapter {
 
 		ReactorAdapter(ReactiveTypeDescriptor descriptor,
-				Function<Object, Publisher<?>> toPublisherFunction,
-				Function<Publisher<?>, Object> fromPublisherFunction) {
+					   Function<Object, Publisher<?>> toPublisherFunction,
+					   Function<Publisher<?>, Object> fromPublisherFunction) {
 
 			super(descriptor, toPublisherFunction, fromPublisherFunction);
 		}
@@ -331,14 +320,12 @@ public class ReactiveAdapterRegistry {
 		}
 	}
 
-
 	private static class EmptyCompletableFuture<T> extends CompletableFuture<T> {
 
 		EmptyCompletableFuture() {
 			complete(null);
 		}
 	}
-
 
 	private static class CoroutinesRegistrar {
 
@@ -351,13 +338,13 @@ public class ReactiveAdapterRegistry {
 					source -> CoroutinesUtils.monoToDeferred(Mono.from(source)));
 
 			registry.registerReactiveType(
-					ReactiveTypeDescriptor.multiValue(kotlinx.coroutines.flow.Flow.class, kotlinx.coroutines.flow.FlowKt::emptyFlow),
+					ReactiveTypeDescriptor.multiValue(kotlinx.coroutines.flow.Flow.class,
+							kotlinx.coroutines.flow.FlowKt::emptyFlow),
 					source -> kotlinx.coroutines.reactor.ReactorFlowKt.asFlux((kotlinx.coroutines.flow.Flow<?>) source),
 					kotlinx.coroutines.reactive.ReactiveFlowKt::asFlow
 			);
 		}
 	}
-
 
 	/**
 	 * {@code BlockHoundIntegration} for spring-core classes.
