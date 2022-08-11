@@ -63,6 +63,7 @@ import java.util.Set;
  */
 public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateComponentProvider {
 	
+	/* Map<String, BeanDefinition> Bean定义容器 */
 	private final BeanDefinitionRegistry registry;
 	
 	private BeanDefinitionDefaults beanDefinitionDefaults = new BeanDefinitionDefaults();
@@ -330,6 +331,8 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	/**
 	 * Check the given candidate's bean name, determining whether the corresponding
 	 * bean definition needs to be registered or conflicts with an existing definition.
+	 *
+	 * 检查给定候选的bean名称，确定是否需要注册相应的bean定义，或者是否与现有的定义冲突。
 	 * @param beanName       the suggested name for the bean
 	 * @param beanDefinition the corresponding bean definition
 	 * @return {@code true} if the bean can be registered as-is;
@@ -339,6 +342,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 *                                            bean definition has been found for the specified name
 	 */
 	protected boolean checkCandidate(String beanName, BeanDefinition beanDefinition) throws IllegalStateException {
+		// Bean的名称在Bean的定义容器中不存在,直接返回true表示验证通过
 		if (!this.registry.containsBeanDefinition(beanName)) {
 			return true;
 		}
@@ -347,6 +351,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		if (originatingDef != null) {
 			existingDef = originatingDef;
 		}
+		// 是否兼容,如果兼容返回false表示不会重新注册到Spring容器中,如果不冲突则会抛异常。
 		if (isCompatible(beanDefinition, existingDef)) {
 			return false;
 		}
@@ -360,6 +365,8 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 * the given existing bean definition.
 	 * <p>The default implementation considers them as compatible when the existing
 	 * bean definition comes from the same source or from a non-scanning source.
+	 *
+	 * 确定给定的新bean定义是否与给定的现有bean定义兼容。当现有bean定义来自同一源或非扫描源时，默认实现认为它们是兼容的。
 	 * @param newDefinition      the new bean definition, originated from scanning
 	 * @param existingDefinition the existing bean definition, potentially an
 	 *                           explicitly defined one or a previously generated one from scanning
@@ -367,11 +374,15 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 * new definition to be skipped in favor of the existing definition
 	 */
 	protected boolean isCompatible(BeanDefinition newDefinition, BeanDefinition existingDefinition) {
-		return (!(existingDefinition instanceof ScannedGenericBeanDefinition) ||  // explicitly registered overriding
-				// bean
-				(newDefinition.getSource() != null && newDefinition.getSource().equals(
-						existingDefinition.getSource())) ||  // scanned same file twice
-				newDefinition.equals(existingDefinition));  // scanned equivalent class twice
+		// (明确注册覆盖 || (有源 && 源class是同一个class文件 ) || Bean定义相同)
+		return (!(
+				// explicitly registered overriding bean
+				existingDefinition instanceof ScannedGenericBeanDefinition) ||
+				(newDefinition.getSource() != null &&
+						// scanned same file twice
+						newDefinition.getSource().equals(existingDefinition.getSource())) ||
+				// scanned equivalent class twice
+				newDefinition.equals(existingDefinition));
 	}
 	
 	/**

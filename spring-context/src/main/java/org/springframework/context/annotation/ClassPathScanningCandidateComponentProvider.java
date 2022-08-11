@@ -312,6 +312,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 */
 	public Set<BeanDefinition> findCandidateComponents(String basePackage) {
 		if (this.componentsIndex != null && indexSupportsIncludeFilters()) {
+			// 读取../resource/META-INF/spring.components配置文件,自定义扫描类
 			return addCandidateComponentsFromIndex(this.componentsIndex, basePackage);
 		} else {
 			// 默认扫描包
@@ -372,11 +373,18 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		return null;
 	}
 	
+	/**../resource/META-INF/spring.components配置文件内容 如
+	 * com.xxx.service.UserService=org.springframework.stereotype.Component
+	 * com.xxx.service.OrderService=org.springframework.stereotype.Component
+	 * 此时Spring初始化时只会加载这两个Service类
+	 * */
 	private Set<BeanDefinition> addCandidateComponentsFromIndex(CandidateComponentsIndex index, String basePackage) {
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
 			Set<String> types = new HashSet<>();
+			// 符合includeFilters的会进行条件匹配,通过了才是Bean,也就是先看有没有@Component
 			for (TypeFilter filter : this.includeFilters) {
+				// Component注解
 				String stereotype = extractStereotype(filter);
 				if (stereotype == null) {
 					throw new IllegalArgumentException("Failed to extract stereotype from " + filter);
@@ -387,9 +395,11 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			boolean debugEnabled = logger.isDebugEnabled();
 			for (String type : types) {
 				MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(type);
+				// 筛选,排除指定的类,excludeFilters, includeFilters判断 @Component-->includeFilters判断
 				if (isCandidateComponent(metadataReader)) {
 					ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
 					sbd.setSource(metadataReader.getResource());
+					// 要需要判断是否是独立类,排除内部类
 					if (isCandidateComponent(sbd)) {
 						if (debugEnabled) {
 							logger.debug("Using candidate component class from index: " + type);
