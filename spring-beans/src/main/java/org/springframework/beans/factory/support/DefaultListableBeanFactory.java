@@ -513,6 +513,8 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		return resolvedBeanNames;
 	}
 	
+	/* 根据类型去factory中获取对应类的名字
+	 * 比如在工厂初始化的时候可以根据BeanFactory去获取所有的BeanFactoryProcessor */
 	private String[] doGetBeanNamesForType(ResolvableType type, boolean includeNonSingletons, boolean allowEagerInit) {
 		List<String> result = new ArrayList<>();
 		

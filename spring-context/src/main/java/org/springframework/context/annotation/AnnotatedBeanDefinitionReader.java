@@ -262,12 +262,18 @@ public class AnnotatedBeanDefinitionReader {
 		 *      }
 		 * */
 		abd.setInstanceSupplier(supplier);
+		// 得到类的作用域
 		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
-		// @Scope用于指定scope作用域的（用在类上）
+		// 把类的作用域添加到数据结构结构中,@Scope用于指定scope作用域的（用在类上）
 		abd.setScope(scopeMetadata.getScopeName());
+		// 生成类的名字通过beanNameGenerator
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
 		// 预处理公共注解 lazy Primary DependsOn 等value的值设置
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+		/*如果在向容器注册注解Bean定义时,使用了额外的限定符注解则解析关于@Qualifier和@Primary这两个注解,
+		 *主要涉及到spring的自动装配这里需要注意的byName和qualifiers这个变量是Annotation类型的数组,
+		 *里面存不仅仅是Qualifier注解理论上里面里面存的是一切注解,
+		 *所以可以看到下面的代码spring去循环了这个数组然后依次判断了注解当中是否含了Primary,是否包含了Lazyd*/
 		if (qualifiers != null) {
 			for (Class<? extends Annotation> qualifier : qualifiers) {
 				/** 是否是@Primary：自动装配时当出现多个Bean候选者时，被注解为@Primary的Bean将作为首选者，
@@ -290,9 +296,11 @@ public class AnnotatedBeanDefinitionReader {
 				customizer.customize(abd);
 			}
 		}
-		
+		// BeanDefinitionHolder 也是一个数据结构
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+		// ScopedProxyMode 这个知识点比较复杂,需要结合web去理解
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		// 把上述的这个数据结构注册给registry,registry就是AnnotatonConfigApplicationContext
 		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
 	}
 	

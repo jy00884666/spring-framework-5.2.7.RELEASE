@@ -16,8 +16,6 @@
 
 package org.springframework.context.annotation;
 
-import java.util.function.Supplier;
-
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -25,6 +23,8 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.function.Supplier;
 
 /**
  * Standalone application context, accepting <em>component classes</em> as input &mdash;
@@ -162,6 +162,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	
 	/**
 	 * 注册一个或多个要处理的组件类。注意，为了让上下文完全处理新类，必须调用{@Link #refresh()}。
+	 * 把一个或者多个.class文件转换成 BeanDefinition并put到 DefaultListableBeanFactory的属性beanDefinitionMap中
 	 * @param componentClasses one or more component classes &mdash; for example,
 	 *                         {@link Configuration @Configuration} classes
 	 * @see #scan(String...)

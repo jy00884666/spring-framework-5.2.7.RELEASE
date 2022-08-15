@@ -29,21 +29,25 @@ import org.springframework.util.ObjectUtils;
  * <p>In general, use this {@code GenericBeanDefinition} class for the purpose of
  * registering user-visible bean definitions (which a post-processor might operate on,
  * potentially even reconfiguring the parent name). Use {@code RootBeanDefinition} /
- * {@code ChildBeanDefinition} where parent/child relationships happen to be pre-determined.
  *
+ * GenericBeanDefinition是用于标准bean定义目的的一站式服务。与任何bean定义一样，它允许指定一个类，
+ * 以及可选的构造函数参数值和属性值。此外，派生自父bean定义可以通过“parentName”属性灵活配置。通常，
+ * 使用这个[@code GenericBeanDefinition]类的目的是注册用户可见的bean定义
+ * (后处理程序可以对其进行操作，甚至可能重新配置父名称)。使用[@code RootBeanDefinition) /
+ *
+ * {@code ChildBeanDefinition} where parent/child relationships happen to be pre-determined.
  * @author Juergen Hoeller
- * @since 2.5
  * @see #setParentName
  * @see RootBeanDefinition
  * @see ChildBeanDefinition
+ * @since 2.5
  */
 @SuppressWarnings("serial")
 public class GenericBeanDefinition extends AbstractBeanDefinition {
-
+	
 	@Nullable
 	private String parentName;
-
-
+	
 	/**
 	 * Create a new GenericBeanDefinition, to be configured through its bean
 	 * properties and configuration methods.
@@ -55,7 +59,7 @@ public class GenericBeanDefinition extends AbstractBeanDefinition {
 	public GenericBeanDefinition() {
 		super();
 	}
-
+	
 	/**
 	 * Create a new GenericBeanDefinition as deep copy of the given
 	 * bean definition.
@@ -64,25 +68,23 @@ public class GenericBeanDefinition extends AbstractBeanDefinition {
 	public GenericBeanDefinition(BeanDefinition original) {
 		super(original);
 	}
-
-
+	
 	@Override
 	public void setParentName(@Nullable String parentName) {
 		this.parentName = parentName;
 	}
-
+	
 	@Override
 	@Nullable
 	public String getParentName() {
 		return this.parentName;
 	}
-
-
+	
 	@Override
 	public AbstractBeanDefinition cloneBeanDefinition() {
 		return new GenericBeanDefinition(this);
 	}
-
+	
 	@Override
 	public boolean equals(@Nullable Object other) {
 		if (this == other) {
@@ -94,7 +96,7 @@ public class GenericBeanDefinition extends AbstractBeanDefinition {
 		GenericBeanDefinition that = (GenericBeanDefinition) other;
 		return (ObjectUtils.nullSafeEquals(this.parentName, that.parentName) && super.equals(other));
 	}
-
+	
 	@Override
 	public String toString() {
 		if (this.parentName != null) {
@@ -102,5 +104,5 @@ public class GenericBeanDefinition extends AbstractBeanDefinition {
 		}
 		return "Generic bean: " + super.toString();
 	}
-
+	
 }

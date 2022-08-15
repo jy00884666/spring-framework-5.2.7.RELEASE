@@ -549,9 +549,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// 为刷新容器预处理。prepare == 预处理
+			/*准备工作包括设置启动时间,是否激活标识位,初始化属性源(property ysource)配置*/
 			prepareRefresh();
 			
-			// 告诉子类刷新内部Bean工厂
+			// 告诉子类刷新内部Bean工厂,返回BeanFactory
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 			
 			// BeanFactory预处理工作,对Bean工厂进行属性填充。prepare == 预处理
@@ -561,7 +562,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 允许在上下文子类中对Bean工厂进行后置处理。空方法子类实现,如 web中的代码
 				postProcessBeanFactory(beanFactory);
 				
-				// 调动在上下文中Bean工厂的后置处理器。处理很多注解
+				// 调动已经注册在上下文中的Bean工厂的后置处理器。处理很多注解
 				invokeBeanFactoryPostProcessors(beanFactory);
 				
 				// 调用Bean的后置处理器。注册bean处理器,这里只是注册功能,真正调用的是getBean方法
@@ -674,6 +675,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	
 	/**
 	 * beanFactory的准备工作,对各种属性进行填充
+	 * 配置其标准的特征,比如上下文的加载器ClassLoader和post-processors回调
 	 * @param beanFactory the BeanFactory to configure
 	 */
 	protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
@@ -704,7 +706,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// 注册 BPP
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
 		
-		/**增加对 AspectJ 的支持,在java中织入分为三种方式,分为编译器织入,类加载器织入,运行期织入,编译器织入是指在java编译期,
+		/**
+		 * 增加对 AspectJ 的支持,在java中织入分为三种方式,分为编译器织入,类加载器织入,运行期织入,编译器织入是指在java编译期,
 		 * 采用特殊的编译器，将切面织入到Java类中;
 		 * 而类加载期织入则指通过特殊的类加载器,在类字节码加载到JVM时,织入切面,运行期织入则是采用cgLib和jdk进行切面的织入.
 		 *

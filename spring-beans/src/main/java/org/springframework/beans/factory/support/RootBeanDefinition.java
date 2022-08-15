@@ -45,6 +45,12 @@ import java.util.function.Supplier;
  * bean definitions programmatically is the {@link GenericBeanDefinition} class.
  * GenericBeanDefinition has the advantage that it allows to dynamically define
  * parent dependencies, not 'hard-coding' the role as a root bean definition.
+ *
+ * 根bean定义表示支持的合并bean定义运行时Spring BeanFactory中的特定bean。
+ * 它可能是由相互继承的多个原始bean定义创建的，通常注册为[@link GenericBeanDefinition GenericBeanDefinitions]。
+ * 根bean定义本质上是运行时的“统一”bean定义视图。根bean定义还可以用于在配置阶段注册各个bean定义。
+ * 然而，从Spring 2.5开始，以编程方式注册bean定义的首选方式是{@link GenericBeanDefinition}类。
+ * GenericBeanDefinition的优点是它允许动态定义父依赖项，而不是将角色“硬编码”为根bean定义。
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see GenericBeanDefinition

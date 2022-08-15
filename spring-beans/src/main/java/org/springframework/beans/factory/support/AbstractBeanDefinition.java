@@ -16,14 +16,6 @@
 
 package org.springframework.beans.factory.support;
 
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-
 import org.springframework.beans.BeanMetadataAttributeAccessor;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -38,6 +30,14 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+
 /**
  * Base class for concrete, full-fledged {@link BeanDefinition} classes,
  * factoring out common properties of {@link GenericBeanDefinition},
@@ -46,6 +46,11 @@ import org.springframework.util.StringUtils;
  * <p>The autowire constants match the ones defined in the
  * {@link org.springframework.beans.factory.config.AutowireCapableBeanFactory}
  * interface.
+ *
+ * 具体的、成熟的[@link BeanDefinition]类的基类，提取出[@link GenericBeanDefinition)、
+ * [@link RootBeanDefinition)和[@link ChildBeanDefinition)的公共属性。
+ * autotowire常量与(@link org.springframework.beans.factory. factory)中定义的常量匹配。
+ * config.AutowireCapabLeBeanFactory)接口。
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @author Rob Harrop
@@ -139,65 +144,140 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	@Nullable
 	private volatile Object beanClass;
 	
+	/**
+	 * bean 的作用范围，对应 bean 属性 scope
+	 */
 	@Nullable
 	private String scope = SCOPE_DEFAULT;
 	
+	/**
+	 * 是否抽象，对应 bean 属性 abstract
+	 */
 	private boolean abstractFlag = false;
 	
+	/**
+	 * 是否延迟加载，对应 bean 属性 lazy-init
+	 */
 	@Nullable
 	private Boolean lazyInit;
 	
+	/**
+	 * 自动存储模式，对应 bean 属性 autowire
+	 */
 	private int autowireMode = AUTOWIRE_NO;
 	
+	/**
+	 * 依赖检查，Spring3.0之后弃用这个属性
+	 */
 	private int dependencyCheck = DEPENDENCY_CHECK_NONE;
 	
+	/**
+	 * 用来表示一个 bean 的实例化依靠另一个 bean 先实例化，对应 bean 属性 depend-on
+	 */
 	@Nullable
 	private String[] dependsOn;
 	
+	/**
+	 * autowire-candidate 属性这只为 true ，这样容器在查找自动装配对象时，将不考虑该 bean ，
+	 * 即它不会倍考虑作为其他 bean 自动装配的候选者，但是该 bean 本身是可以使用自动装配来
+	 * 注入其他 bean 的
+	 */
 	private boolean autowireCandidate = true;
 	
+	/**
+	 * 自动装配时当出现多个 bean 候选者时，将作为首选者，对应 bean 属性 primary
+	 */
 	private boolean primary = false;
 	
+	/**
+	 * 用于记录 Qualifier ，对应子元素 qualifier
+	 */
 	private final Map<String, AutowireCandidateQualifier> qualifiers = new LinkedHashMap<>();
 	
 	@Nullable
 	private Supplier<?> instanceSupplier;
 	
+	/**
+	 * 允许访问非公开的构造器和方法
+	 */
 	private boolean nonPublicAccessAllowed = true;
 	
+	/**
+	 * 是否以一种宽松的模式解析构造函数，默认 true
+	 */
 	private boolean lenientConstructorResolution = true;
 	
+	/**
+	 * 对应 bean 属性 factory-bean
+	 */
 	@Nullable
 	private String factoryBeanName;
 	
+	/**
+	 * 对应 bean 属性 factory-method
+	 */
 	@Nullable
 	private String factoryMethodName;
 	
+	/**
+	 * 记录构造函数注入属性，对应 bean 属性 constructor-arg
+	 */
 	@Nullable
 	private ConstructorArgumentValues constructorArgumentValues;
 	
+	/**
+	 * 普通属性 property 集合
+	 */
 	@Nullable
 	private MutablePropertyValues propertyValues;
 	
+	/**
+	 * 方法重写的持有者，记录 lookup-method 和 replaced-method 元素
+	 */
 	private MethodOverrides methodOverrides = new MethodOverrides();
 	
+	/**
+	 * 初始化方法，对应 bean 属性 init-method
+	 */
 	@Nullable
 	private String initMethodName;
 	
+	/**
+	 * 销毁方法，对应 bean 属性 destroy-method
+	 */
 	@Nullable
 	private String destroyMethodName;
 	
+	/**
+	 * 是否执行 init-method 方法
+	 */
 	private boolean enforceInitMethod = true;
 	
+	/**
+	 * 是否执行 destroy-method 方法
+	 */
 	private boolean enforceDestroyMethod = true;
 	
+	/**
+	 * 是否是用户定义的而不是应用程序本身定义的，创建 AOP 时为 true ，程序设置
+	 */
 	private boolean synthetic = false;
 	
+	/**
+	 * 定义这个 bean 的角色范围，ROLE_APPLICATION：用户；ROLE_INFRASTRUCTURE：完全内部使用，与用户无关；
+	 * ROLE_SUPPORT：某些复杂配置的一部分程序设置
+	 */
 	private int role = BeanDefinition.ROLE_APPLICATION;
 	
+	/**
+	 * bean 的描述信息
+	 */
 	@Nullable
 	private String description;
 	
+	/**
+	 * bean 定义涉及到的资源
+	 */
 	@Nullable
 	private Resource resource;
 	
