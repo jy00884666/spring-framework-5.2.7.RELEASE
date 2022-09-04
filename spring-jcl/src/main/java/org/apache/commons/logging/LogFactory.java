@@ -45,12 +45,11 @@ package org.apache.commons.logging;
  * or SLF4J or {@code java.util.logging}.</b> Simply put Log4j 2.x or Logback
  * (or another SLF4J provider) onto your classpath, without any extra bridges,
  * and let the framework auto-adapt to your choice.
- *
  * @author Juergen Hoeller (for the {@code spring-jcl} variant)
  * @since 5.0
  */
 public abstract class LogFactory {
-
+	
 	/**
 	 * Convenience method to return a named logger.
 	 * @param clazz containing Class from which a log name will be derived
@@ -58,16 +57,16 @@ public abstract class LogFactory {
 	public static Log getLog(Class<?> clazz) {
 		return getLog(clazz.getName());
 	}
-
+	
 	/**
 	 * Convenience method to return a named logger.
+	 * 返回一个命名的Logger的方便方法
 	 * @param name logical name of the <code>Log</code> instance to be returned
 	 */
 	public static Log getLog(String name) {
 		return LogAdapter.createLog(name);
 	}
-
-
+	
 	/**
 	 * This method only exists for compatibility with unusual Commons Logging API
 	 * usage like e.g. {@code LogFactory.getFactory().getInstance(Class/String)}.
@@ -77,9 +76,10 @@ public abstract class LogFactory {
 	 */
 	@Deprecated
 	public static LogFactory getFactory() {
-		return new LogFactory() {};
+		return new LogFactory() {
+		};
 	}
-
+	
 	/**
 	 * Convenience method to return a named logger.
 	 * <p>This variant just dispatches straight to {@link #getLog(Class)}.
@@ -90,7 +90,7 @@ public abstract class LogFactory {
 	public Log getInstance(Class<?> clazz) {
 		return getLog(clazz);
 	}
-
+	
 	/**
 	 * Convenience method to return a named logger.
 	 * <p>This variant just dispatches straight to {@link #getLog(String)}.
@@ -101,5 +101,5 @@ public abstract class LogFactory {
 	public Log getInstance(String name) {
 		return getLog(name);
 	}
-
+	
 }

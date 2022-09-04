@@ -444,8 +444,10 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 筛选出需要注入的属性类型
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
 		try {
+			// 进行属性注入
 			metadata.inject(bean, beanName, pvs);
 		} catch (BeanCreationException ex) {
 			throw ex;
@@ -455,11 +457,11 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		return pvs;
 	}
 	
+	/*过时方法*/
 	@Deprecated
 	@Override
 	public PropertyValues postProcessPropertyValues(
 			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) {
-		
 		return postProcessProperties(pvs, bean, beanName);
 	}
 	
@@ -467,14 +469,18 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	 * 'Native' processing method for direct calls with an arbitrary target instance,
 	 * resolving all of its fields and methods which are annotated with one of the
 	 * configured 'autowired' annotation types.
+	 *
+	 * '本机'处理方法，用于对任意目标实例的直接调用，解析其所有用配置的'自动连线'注释类型之一注释的字段和方法。
 	 * @param bean the target instance to process
 	 * @throws BeanCreationException if autowiring failed
 	 * @see #setAutowiredAnnotationTypes(Set)
 	 */
 	public void processInjection(Object bean) throws BeanCreationException {
 		Class<?> clazz = bean.getClass();
+		// 筛选出需要注入的属性类型
 		InjectionMetadata metadata = findAutowiringMetadata(clazz.getName(), clazz, null);
 		try {
+			// 进行属性注入
 			metadata.inject(bean, null, null);
 		} catch (BeanCreationException ex) {
 			throw ex;
@@ -484,11 +490,16 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		}
 	}
 	
+	/**
+	 * 这个方法第一次调用是在 postProcessMergedBeanDefinition 方法中，后续的调用都是从缓存中获取了
+	 */
 	private InjectionMetadata findAutowiringMetadata(String beanName, Class<?> clazz, @Nullable PropertyValues pvs) {
 		// Fall back to class name as cache key, for backwards compatibility with custom callers.
 		String cacheKey = (StringUtils.hasLength(beanName) ? beanName : clazz.getName());
 		// Quick check on the concurrent map first, with minimal locking.
+		// 从缓存中获取metadata
 		InjectionMetadata metadata = this.injectionMetadataCache.get(cacheKey);
+		// 如果需要刷新  ： metadata == null || metadata.needsRefresh(clazz)
 		if (InjectionMetadata.needsRefresh(metadata, clazz)) {
 			synchronized (this.injectionMetadataCache) {
 				metadata = this.injectionMetadataCache.get(cacheKey);
@@ -496,6 +507,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					if (metadata != null) {
 						metadata.clear(pvs);
 					}
+					// 创建 metadata
 					metadata = buildAutowiringMetadata(clazz);
 					this.injectionMetadataCache.put(cacheKey, metadata);
 				}
@@ -504,7 +516,9 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		return metadata;
 	}
 	
+	// 核心的筛选功能方法
 	private InjectionMetadata buildAutowiringMetadata(final Class<?> clazz) {
+		// 确定给定的类是否适合携带指定的注释，比如一些注释只能用在方法或者类上
 		if (!AnnotationUtils.isCandidateClass(clazz, this.autowiredAnnotationTypes)) {
 			return InjectionMetadata.EMPTY;
 		}
@@ -514,7 +528,8 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		
 		do {
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
-			
+			// 遍历类中的每个属性，判断属性是否包含指定的属性(通过 findAutowiredAnnotation 方法)
+			// 如果存在则保存，这里注意，属性保存的类型是 AutowiredFieldElement
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
 				MergedAnnotation<?> ann = findAutowiredAnnotation(field);
 				if (ann != null) {
@@ -528,7 +543,8 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					currElements.add(new AutowiredFieldElement(field, required));
 				}
 			});
-			
+			// 遍历类中的每个方法，判断属性是否包含指定的属性(通过 findAutowiredAnnotation 方法)
+			// 如果存在则保存，这里注意，方法保存的类型是 AutowiredMethodElement
 			ReflectionUtils.doWithLocalMethods(targetClass, method -> {
 				Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {
@@ -558,10 +574,15 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			targetClass = targetClass.getSuperclass();
 		}
 		while (targetClass != null && targetClass != Object.class);
-		
+		// 将结果返回
 		return InjectionMetadata.forElements(elements, clazz);
 	}
 	
+	/**
+	 * AutowiredAnnotationBeanPostProcessor类中的另一个重要方法是findAutowiredAnnotation，
+	 * 它通过分析属于一个字段或一个方法的所有注解来查找@Autowired注解，
+	 * 如果未找到@Autowired注解，则返回null，字段或方法也就视为不可注入。
+	 */
 	@Nullable
 	private MergedAnnotation<?> findAutowiredAnnotation(AccessibleObject ao) {
 		MergedAnnotations annotations = MergedAnnotations.from(ao);
@@ -651,6 +672,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	
 	/**
 	 * Class representing injection information about an annotated field.
+	 * 通过注释注入的。
 	 */
 	private class AutowiredFieldElement extends InjectionMetadata.InjectedElement {
 		
@@ -666,13 +688,22 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			this.required = required;
 		}
 		
+		/**
+		 * 筛选出需要注入的元素，则开始进行注入，这里可以看到，inject 的实现很简单，遍历所有元素，调用元素的 inject 方法。不过这里就知道上面针对属性和方法，保存的类型分别是
+		 * AutowiredFieldElement、AutowiredMethodElement。所以属性调用的是AutowiredFieldElement.inject， 方法调用的是
+		 * AutowiredMethodElement.inject
+		 */
 		@Override
 		protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
 			Field field = (Field) this.member;
 			Object value;
+			// 如果缓存，从缓存中获取
 			if (this.cached) {
+				// 判断 如果  cachedFieldValue instanceof DependencyDescriptor。则调用 resolveDependency 方法重新加载。
 				value = resolvedCachedArgument(beanName, this.cachedFieldValue);
 			} else {
+				// 否则调用了 resolveDependency 方法。这个在前篇讲过，在 populateBean 方法中按照类型注入的时候就是通过此方法，也就是说明了 @Autowired 和
+				// @Inject默认是 按照类型注入的
 				DependencyDescriptor desc = new DependencyDescriptor(field, this.required);
 				desc.setContainingClass(bean.getClass());
 				Set<String> autowiredBeanNames = new LinkedHashSet<>(1);
@@ -684,10 +715,14 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					throw new UnsatisfiedDependencyException(null, beanName, new InjectionPoint(field), ex);
 				}
 				synchronized (this) {
+					// 如果没有缓存，则开始缓存
 					if (!this.cached) {
 						if (value != null || this.required) {
+							// 这里先缓存一下 desc，如果下面 utowiredBeanNames.size() > 1。则在上面从缓存中获取的时候会重新获取。
 							this.cachedFieldValue = desc;
+							// 注册依赖bean
 							registerDependentBeans(beanName, autowiredBeanNames);
+							// 如果按照类型只查到一个bean(因为可能存在多个类型相同，name不同的bean)，则缓存
 							if (autowiredBeanNames.size() == 1) {
 								String autowiredBeanName = autowiredBeanNames.iterator().next();
 								if (beanFactory.containsBean(autowiredBeanName) &&
@@ -704,6 +739,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				}
 			}
 			if (value != null) {
+				// 通过反射，给属性赋值
 				ReflectionUtils.makeAccessible(field);
 				field.set(bean, value);
 			}
@@ -712,6 +748,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	
 	/**
 	 * Class representing injection information about an annotated method.
+	 * 通过方法注入的
 	 */
 	private class AutowiredMethodElement extends InjectionMetadata.InjectedElement {
 		
@@ -727,29 +764,39 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			this.required = required;
 		}
 		
+		/**
+		 * AutowiredAnnotationBeanPostProcessor 的属性注入是通过类型注入的，如果是属性，则直接从Spring容器中根据类型获取bean，
+		 * 通过反射赋值。如果是方法，则获取方法的参数列表，从容器中获取对应的参数，获取到后通过反射调用方法。
+		 */
 		@Override
 		protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+			// 检测是否可以跳过
 			if (checkPropertySkipping(pvs)) {
 				return;
 			}
+			// 获取方法
 			Method method = (Method) this.member;
 			Object[] arguments;
+			// 如果有缓存从缓存中获取
 			if (this.cached) {
 				// Shortcut for avoiding synchronization...
 				arguments = resolveCachedArguments(beanName);
 			} else {
+				// 获取方法的参数，从Spring 容器中获取(缓存中没有则尝试创建)
 				int argumentCount = method.getParameterCount();
 				arguments = new Object[argumentCount];
 				DependencyDescriptor[] descriptors = new DependencyDescriptor[argumentCount];
 				Set<String> autowiredBeans = new LinkedHashSet<>(argumentCount);
 				Assert.state(beanFactory != null, "No BeanFactory available");
 				TypeConverter typeConverter = beanFactory.getTypeConverter();
+				// 遍历参数从容器中获取
 				for (int i = 0; i < arguments.length; i++) {
 					MethodParameter methodParam = new MethodParameter(method, i);
 					DependencyDescriptor currDesc = new DependencyDescriptor(methodParam, this.required);
 					currDesc.setContainingClass(bean.getClass());
 					descriptors[i] = currDesc;
 					try {
+						// 根据类型从容器中获取
 						Object arg = beanFactory.resolveDependency(currDesc, beanName, autowiredBeans, typeConverter);
 						if (arg == null && !this.required) {
 							arguments = null;
@@ -761,6 +808,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 					}
 				}
 				synchronized (this) {
+					// 如果没有缓存，则开始缓存,同上面inject(...)方法类似
 					if (!this.cached) {
 						if (arguments != null) {
 							DependencyDescriptor[] cachedMethodArguments = Arrays.copyOf(descriptors,
@@ -788,6 +836,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			}
 			if (arguments != null) {
 				try {
+					// 通过反射，调用注解标注的方法
 					ReflectionUtils.makeAccessible(method);
 					method.invoke(bean, arguments);
 				} catch (InvocationTargetException ex) {

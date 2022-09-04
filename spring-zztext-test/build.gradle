@@ -47,7 +47,8 @@ dependencies {
     // JSON
     compile("com.alibaba:fastjson:1.2.5")
 
-    // Lombok依赖
-    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
+
+
+
 
 }
