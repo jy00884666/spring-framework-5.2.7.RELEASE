@@ -50,6 +50,7 @@ import java.io.IOException;
  * common {@link AbstractXmlApplicationContext} base class;
  * {@link org.springframework.context.annotation.AnnotationConfigApplicationContext}
  * supports {@code @Configuration}-annotated classes as a source of bean definitions.
+ *
  * @author Juergen Hoeller
  * @author Chris Beams
  * @see #loadBeanDefinitions
@@ -83,6 +84,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	
 	/**
 	 * Create a new AbstractRefreshableApplicationContext with the given parent context.
+	 *
 	 * @param parent the parent context
 	 */
 	public AbstractRefreshableApplicationContext(@Nullable ApplicationContext parent) {
@@ -93,6 +95,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * Set whether it should be allowed to override bean definitions by registering
 	 * a different definition with the same name, automatically replacing the former.
 	 * If not, an exception will be thrown. Default is "true".
+	 *
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowBeanDefinitionOverriding
 	 */
 	public void setAllowBeanDefinitionOverriding(boolean allowBeanDefinitionOverriding) {
@@ -104,6 +107,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * try to resolve them.
 	 * <p>Default is "true". Turn this off to throw an exception when encountering
 	 * a circular reference, disallowing them completely.
+	 *
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowCircularReferences
 	 */
 	public void setAllowCircularReferences(boolean allowCircularReferences) {
@@ -114,10 +118,13 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * This implementation performs an actual refresh of this context's underlying
 	 * bean factory, shutting down the previous bean factory (if any) and
 	 * initializing a fresh bean factory for the next phase of the context's lifecycle.
+	 *
+	 * 该实现对该上下文的底层bean工厂执行实际刷新，关闭前一个bean工厂(如果有的话)，
+	 * 并为上下文生命周期的下一个阶段初始化一个新的bean工厂。
 	 */
 	@Override
 	protected final void refreshBeanFactory() throws BeansException {
-		// 如果存在 beanFactory.则销段 beanFactory
+		// 如果存在 beanFactory 则销段 beanFactory
 		if (hasBeanFactory()) {
 			destroyBeans();
 			closeBeanFactory();
@@ -129,7 +136,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 			beanFactory.setSerializationId(getId());
 			// 定制 beanFactory,设置相关属性,包括是否允许覆盖同名称的不同定义的对象以及循环依赖
 			customizeBeanFactory(beanFactory);
-			// 初始化 documentReader,并进行XML文件读取及解析,默认命名空间的解析, 自定义标签的解析,若是注解则解析类
+			// 初始化 documentReader,并进行XML文件读取及解析,默认命名空间的解析,自定义标签的解析,若是注解则解析类,委派模式子类实现
 			loadBeanDefinitions(beanFactory);
 			this.beanFactory = beanFactory;
 		} catch (IOException ex) {
@@ -190,6 +197,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * with the {@linkplain #getInternalParentBeanFactory() internal bean factory} of this
 	 * context's parent as parent bean factory. Can be overridden in subclasses,
 	 * for example to customize DefaultListableBeanFactory's settings.
+	 *
 	 * @return the bean factory for this context
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowBeanDefinitionOverriding
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowEagerClassLoading
@@ -208,6 +216,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * and {@linkplain #setAllowCircularReferences "allowCircularReferences"} settings,
 	 * if specified. Can be overridden in subclasses to customize any of
 	 * {@link DefaultListableBeanFactory}'s settings.
+	 *
 	 * @param beanFactory the newly created bean factory for this context
 	 * @see DefaultListableBeanFactory#setAllowBeanDefinitionOverriding
 	 * @see DefaultListableBeanFactory#setAllowCircularReferences
@@ -228,6 +237,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	/**
 	 * Load bean definitions into the given bean factory, typically through
 	 * delegating to one or more bean definition readers.
+	 *
 	 * @param beanFactory the bean factory to load bean definitions into
 	 * @throws BeansException if parsing of the bean definitions failed
 	 * @throws IOException    if loading of bean definition files failed

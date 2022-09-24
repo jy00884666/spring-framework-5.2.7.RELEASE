@@ -1,5 +1,9 @@
 package com.test.service;
 
+import com.test.bean.Person;
+
 public interface UserService {
-	public int addUser(String name, String pass);
+	
+	public Person addUser(String name, String sex);
+	
 }

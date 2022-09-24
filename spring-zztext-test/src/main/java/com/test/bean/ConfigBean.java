@@ -1,11 +1,9 @@
 package com.test.bean;
 
-import com.test.aspect.LogAnnotationAspect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.context.annotation.Import;
 
 /*申明配置类
 	属性(proxyBeanMethods = false)默认等于true表示需要是否需要把配置的Bean放入Spirng容器中*/
@@ -18,11 +16,12 @@ import org.springframework.context.annotation.Import;
 //@Import(value = LogAnnotationAspect.class)
 public class ConfigBean {
 	
+	/*初始化*/
 	@Bean
 	public Person person() {
 		Person person = new Person();
-		/*person.setName("a1");
-		person.setSex("18");*/
+		person.setName("a1");
+		person.setSex("18");
 		return person;
 	}
 }

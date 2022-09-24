@@ -27,9 +27,10 @@ public class MyText {
 		 */
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConfigBean.class);
 		// 获取对象Bean
+		Person p = (Person) context.getBean("person");
+		System.out.println("IOC容器取对象" + p);
 		UserService userService = (UserService) context.getBean("userService");
-		System.out.println("userService:" + userService.addUser("张三李四", ""));
-		
+		System.out.println("userService:" + userService.addUser("张三李四", "12"));
 		
 		/****************************面试**************************************/
 		/*验证(),[],{}是否成对*/
