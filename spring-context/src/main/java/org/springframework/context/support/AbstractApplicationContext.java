@@ -594,7 +594,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 销毁已经创建的单例，以避免悬空资源。
 				destroyBeans();
 				
-				// 重置“活跃”的旗帜。
+				// Reset 'active' flag.
+				// 取消refresh操作,重置容器的同步标识
 				cancelRefresh(ex);
 				
 				// 将异常传播给调用者。

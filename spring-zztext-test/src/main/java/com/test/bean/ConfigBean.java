@@ -21,8 +21,8 @@ public class ConfigBean {
 	@Bean
 	public Person person() {
 		Person person = new Person();
-		person.setName("a1");
-		person.setSex("18");
+		/*person.setName("a1");
+		person.setSex("18");*/
 		return person;
 	}
 }
