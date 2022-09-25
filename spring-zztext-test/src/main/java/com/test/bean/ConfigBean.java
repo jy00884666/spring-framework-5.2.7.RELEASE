@@ -16,7 +16,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 //@Import(value = LogAnnotationAspect.class)
 public class ConfigBean {
 	
-	/*初始化*/
+	/*引用第三方对象,通常使用这种方式new出来*/
 	@Bean
 	public Person person() {
 		Person person = new Person();

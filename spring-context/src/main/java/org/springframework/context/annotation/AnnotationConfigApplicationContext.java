@@ -41,6 +41,7 @@ import java.util.function.Supplier;
  * {@code @Configuration} class.
  *
  * <p>See {@link Configuration @Configuration}'s javadoc for usage examples.
+ *
  * @author Juergen Hoeller
  * @author Chris Beams
  * @see #register
@@ -52,8 +53,14 @@ import java.util.function.Supplier;
  */
 public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry {
 	
+	/**
+	 * 这个类顾名思义是一个reader,一个读取器
+	 * 读取什么呢?还是顾名思义 AnnotatedBeanDefinition 意思是读取一个被加了注解的bean
+	 * 这个类在构造方法中实例化的
+	 */
 	private final AnnotatedBeanDefinitionReader reader;
 	
+	/**同意频名思义,这是一个扫描器,扫摘所有加了注解的bean同样是在构造方法中被实例化的*/
 	private final ClassPathBeanDefinitionScanner scanner;
 	
 	/**
@@ -80,6 +87,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	
 	/**
 	 * Create a new AnnotationConfigApplicationContext with the given DefaultListableBeanFactory.
+	 *
 	 * @param beanFactory the DefaultListableBeanFactory instance to use for this context
 	 */
 	public AnnotationConfigApplicationContext(DefaultListableBeanFactory beanFactory) {
@@ -90,7 +98,8 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	
 	/**
 	 * 创建一个新的AnnotationConfigApplicationContext，从给定的组件类派生bean定义，并自动刷新上下文。
-	 * 这个构造方法需要传入一个被javaconfig 注解了的配置类然后会把这个被注解了jaraconfig的类通过注解读取器读取后继而解析
+	 * 这个构造方法需要传入一个被 javaconfig 注解了的配置类然后会把这个被注解了jaraconfig的类通过注解读取器读取后继而解析
+	 *
 	 * @param componentClasses 一个或多个组件类 ;例如
 	 *                         {@link Configuration @Configuration} classes
 	 */
@@ -108,6 +117,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * Create a new AnnotationConfigApplicationContext, scanning for components
 	 * in the given packages, registering bean definitions for those components,
 	 * and automatically refreshing the context.
+	 *
 	 * @param basePackages the packages to scan for component classes
 	 */
 	public AnnotationConfigApplicationContext(String... basePackages) {
@@ -133,6 +143,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * <p>Default is {@link AnnotationBeanNameGenerator}.
 	 * <p>Any call to this method must occur prior to calls to {@link #register(Class...)}
 	 * and/or {@link #scan(String...)}.
+	 *
 	 * @see AnnotatedBeanDefinitionReader#setBeanNameGenerator
 	 * @see ClassPathBeanDefinitionScanner#setBeanNameGenerator
 	 * @see AnnotationBeanNameGenerator
@@ -163,6 +174,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	/**
 	 * 注册一个或多个要处理的组件类。注意，为了让上下文完全处理新类，必须调用{@Link #refresh()}。
 	 * 把一个或者多个.class文件转换成 BeanDefinition并put到 DefaultListableBeanFactory的属性beanDefinitionMap中
+	 *
 	 * @param componentClasses one or more component classes &mdash; for example,
 	 *                         {@link Configuration @Configuration} classes
 	 * @see #scan(String...)
@@ -178,6 +190,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * Perform a scan within the specified base packages.
 	 * <p>Note that {@link #refresh()} must be called in order for the context
 	 * to fully process the new classes.
+	 *
 	 * @param basePackages the packages to scan for component classes
 	 * @see #register(Class...)
 	 * @see #refresh()

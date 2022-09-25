@@ -4,6 +4,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+/**
+ * ApplicationContextAware后置处理器接口
+ */
 public class Person implements ApplicationContextAware {
 	
 	private String name;
