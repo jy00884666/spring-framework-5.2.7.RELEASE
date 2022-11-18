@@ -1,3 +1,4 @@
+// 引入插件
 plugins {
     id 'java'
 }
@@ -5,8 +6,10 @@ plugins {
 group 'org.springframework'
 version '5.2.7.RELEASE'
 
+// jdk版本号
 sourceCompatibility = 1.8
 
+// 仓库配置，mavenCentral()代表中央仓库
 repositories {
     mavenCentral()
 }
@@ -19,15 +22,40 @@ dependencies {
      * provided : 依赖的包只参与编译而不会打包到最终的 apk 文件中。
      * runtime : 适用于依赖的包只作用在运行时而不需要在编译时。
      * optional : 选择性依赖
-     */
+     **/
 
     // 加依赖
     optional(project(":spring-aop"))
+    optional(project(":spring-aspects"))
     optional(project(":spring-beans"))
     optional(project(":spring-context"))
+    optional(project(":spring-context-indexer"))
+    optional(project(":spring-context-support"))
     compile(project(":spring-core"))
-    optional(project(":spring-aspects"))
+    optional(project(":spring-expression"))
+    optional(project(":spring-instrument"))
+    optional(project(":spring-jcl"))
+    optional(project(":spring-jdbc"))
+    optional(project(":spring-jms"))
+    optional(project(":spring-messaging"))
+    optional(project(":spring-orm"))
+    optional(project(":spring-oxm"))
     optional(project(":spring-test"))
+    optional(project(":spring-tx"))
+    optional(project(":spring-web"))
+    optional(project(":spring-webflux"))
+    optional(project(":spring-webmvc"))
+    optional(project(":spring-websocket"))
+
+
+    /**
+     * Gradle（4.1以上版本） 的构建文件中添加依赖的几种方式
+     * api：与旧版的compile相同；
+     * implementation：解决重复依赖问题。例如A依赖B，B依赖C，那么A里面将不能调用C的方法；
+     * compileOnly：编译有效，打包无效。替代旧版的 provider；
+     * runtimeOnly：打包有效，编译无效；
+     * test、debug、release implementation：对应test、debug、release环境的implementation；
+     **/
 
     // 日志
     //compile("log4j:log4j:1.2.17")
@@ -47,8 +75,26 @@ dependencies {
     // JSON
     compile("com.alibaba:fastjson:1.2.5")
 
-
+    /**
+     * compileOnly：只编译时有效，不参与打包。代替旧版本的provided
+     * annotationProcessor：管理注解处理器，并将其添加处处理器类路径中
+     *
+     * 针对5.0以下版本，对应依赖如下
+     * compileOnly 'org.projectlombok:lombok:1.18.4'
+     **/
+    // Lombok依赖,光是依赖这个还不行,得使用annotationProcessor
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
+    // 一开就报错,至今无法解决
+    //annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
+    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
 
 
 
 }
+
+
+
+
+
+
