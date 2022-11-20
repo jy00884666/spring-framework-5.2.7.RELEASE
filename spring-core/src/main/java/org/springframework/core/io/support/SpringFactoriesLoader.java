@@ -53,6 +53,7 @@ import org.springframework.util.StringUtils;
  * <p>
  * where {@code example.MyService} is the name of the interface, and {@code MyServiceImpl1}
  * and {@code MyServiceImpl2} are two implementations.
+ *
  * @author Arjen Poutsma
  * @author Juergen Hoeller
  * @author Sam Brannen
@@ -80,6 +81,9 @@ public final class SpringFactoriesLoader {
 	 * <p>The returned factories are sorted through {@link AnnotationAwareOrderComparator}.
 	 * <p>If a custom instantiation strategy is required, use {@link #loadFactoryNames}
 	 * to obtain all registered factory names.
+	 *
+	 * 属性加载器实例化逻辑代码
+	 *
 	 * @param factoryType the interface or abstract class representing the factory
 	 * @param classLoader the ClassLoader to use for loading (can be {@code null} to use the default)
 	 * @throws IllegalArgumentException if any factory implementation class cannot
@@ -108,6 +112,7 @@ public final class SpringFactoriesLoader {
 	 * Load the fully qualified class names of factory implementations of the
 	 * given type from {@value #FACTORIES_RESOURCE_LOCATION}, using the given
 	 * class loader.
+	 *
 	 * @param factoryType the interface or abstract class representing the factory
 	 * @param classLoader the ClassLoader to use for loading resources; can be
 	 *                    {@code null} to use the default
@@ -117,11 +122,13 @@ public final class SpringFactoriesLoader {
 	public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader) {
 		// 获取类型名称,如 org.springframework.context.ApplicationListener
 		String factoryTypeName = factoryType.getName();
+		// loadSpringFactories 加载spring.factories文件中的所有信息,getOrDefault()根据名称加载对应信息
 		return loadSpringFactories(classLoader).getOrDefault(factoryTypeName, Collections.emptyList());
 	}
 	
 	/**
 	 * 读取spring.factories配置文件,装在key value到缓存集合cache中
+	 *
 	 * @param classLoader
 	 * @return
 	 */
@@ -140,11 +147,13 @@ public final class SpringFactoriesLoader {
 					ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
 			// 一个键对应一个或多个值 void add(K, List);
 			result = new LinkedMultiValueMap<>();
+			// 遍历每个文件
 			while (urls.hasMoreElements()) {
 				URL url = urls.nextElement();
 				UrlResource resource = new UrlResource(url);
 				// 读取多个监听
 				Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+				// 遍历所有key与属性值
 				for (Map.Entry<?, ?> entry : properties.entrySet()) {
 					// 如 key : org.springframework.boot.autoconfigure.AutoConfigurationImportFilter
 					String factoryTypeName = ((String) entry.getKey()).trim();

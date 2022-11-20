@@ -16,6 +16,21 @@
 
 package org.springframework.beans.factory.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.core.CollectionFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.reader.UnicodeReader;
+import org.yaml.snakeyaml.representer.Representer;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
@@ -28,22 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.reader.UnicodeReader;
-import org.yaml.snakeyaml.representer.Representer;
-
-import org.springframework.core.CollectionFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
-
 /**
  * Base class for YAML factories.
  *
@@ -55,20 +54,19 @@ import org.springframework.util.StringUtils;
  * @since 4.1
  */
 public abstract class YamlProcessor {
-
+	
 	private final Log logger = LogFactory.getLog(getClass());
-
+	
 	private ResolutionMethod resolutionMethod = ResolutionMethod.OVERRIDE;
-
+	
 	private Resource[] resources = new Resource[0];
-
+	
 	private List<DocumentMatcher> documentMatchers = Collections.emptyList();
-
+	
 	private boolean matchDefault = true;
-
+	
 	private Set<String> supportedTypes = Collections.emptySet();
-
-
+	
 	/**
 	 * A map of document matchers allowing callers to selectively use only
 	 * some of the documents in a YAML resource. In YAML documents are
@@ -98,7 +96,7 @@ public abstract class YamlProcessor {
 	public void setDocumentMatchers(DocumentMatcher... matchers) {
 		this.documentMatchers = Arrays.asList(matchers);
 	}
-
+	
 	/**
 	 * Flag indicating that a document for which all the
 	 * {@link #setDocumentMatchers(DocumentMatcher...) document matchers} abstain will
@@ -107,7 +105,7 @@ public abstract class YamlProcessor {
 	public void setMatchDefault(boolean matchDefault) {
 		this.matchDefault = matchDefault;
 	}
-
+	
 	/**
 	 * Method to use for resolving resources. Each resource will be converted to a Map,
 	 * so this property is used to decide which map entries to keep in the final output
@@ -117,37 +115,38 @@ public abstract class YamlProcessor {
 		Assert.notNull(resolutionMethod, "ResolutionMethod must not be null");
 		this.resolutionMethod = resolutionMethod;
 	}
-
+	
 	/**
 	 * Set locations of YAML {@link Resource resources} to be loaded.
+	 *
 	 * @see ResolutionMethod
 	 */
 	public void setResources(Resource... resources) {
 		this.resources = resources;
 	}
-
+	
 	/**
 	 * Set the supported types that can be loaded from YAML documents.
 	 * <p>If no supported types are configured, all types encountered in YAML
 	 * documents will be supported. If an unsupported type is encountered, an
 	 * {@link IllegalStateException} will be thrown when the corresponding YAML
 	 * node is processed.
+	 *
 	 * @param supportedTypes the supported types, or an empty array to clear the
-	 * supported types
-	 * @since 5.1.16
+	 *                       supported types
 	 * @see #createYaml()
+	 * @since 5.1.16
 	 */
 	public void setSupportedTypes(Class<?>... supportedTypes) {
 		if (ObjectUtils.isEmpty(supportedTypes)) {
 			this.supportedTypes = Collections.emptySet();
-		}
-		else {
+		} else {
 			Assert.noNullElements(supportedTypes, "'supportedTypes' must not contain null elements");
 			this.supportedTypes = Arrays.stream(supportedTypes).map(Class::getName)
 					.collect(Collectors.collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
 		}
 	}
-
+	
 	/**
 	 * Provide an opportunity for subclasses to process the Yaml parsed from the supplied
 	 * resources. Each resource is parsed in turn and the documents inside checked against
@@ -155,19 +154,21 @@ public abstract class YamlProcessor {
 	 * matches it is passed into the callback, along with its representation as Properties.
 	 * Depending on the {@link #setResolutionMethod(ResolutionMethod)} not all of the
 	 * documents will be parsed.
+	 *
 	 * @param callback a callback to delegate to once matching documents are found
 	 * @see #createYaml()
 	 */
 	protected void process(MatchCallback callback) {
 		Yaml yaml = createYaml();
 		for (Resource resource : this.resources) {
+			// 最终加载文件的方法 process(callback, yaml, resource)
 			boolean found = process(callback, yaml, resource);
 			if (this.resolutionMethod == ResolutionMethod.FIRST_FOUND && found) {
 				return;
 			}
 		}
 	}
-
+	
 	/**
 	 * Create the {@link Yaml} instance to use.
 	 * <p>The default implementation sets the "allowDuplicateKeys" flag to {@code false},
@@ -177,19 +178,20 @@ public abstract class YamlProcessor {
 	 * a {@code Yaml} instance that filters out unsupported types encountered in
 	 * YAML documents. If an unsupported type is encountered, an
 	 * {@link IllegalStateException} will be thrown when the node is processed.
+	 *
 	 * @see LoaderOptions#setAllowDuplicateKeys(boolean)
 	 */
 	protected Yaml createYaml() {
 		LoaderOptions loaderOptions = new LoaderOptions();
 		loaderOptions.setAllowDuplicateKeys(false);
-
+		
 		if (!this.supportedTypes.isEmpty()) {
 			return new Yaml(new FilteringConstructor(loaderOptions), new Representer(),
 					new DumperOptions(), loaderOptions);
 		}
 		return new Yaml(loaderOptions);
 	}
-
+	
 	private boolean process(MatchCallback callback, Yaml yaml, Resource resource) {
 		int count = 0;
 		try {
@@ -198,6 +200,7 @@ public abstract class YamlProcessor {
 			}
 			try (Reader reader = new UnicodeReader(resource.getInputStream())) {
 				for (Object object : yaml.loadAll(reader)) {
+					// 将加载的yml文件内容转换成map，然后执行callback 方法将map里的内容放入result 中
 					if (object != null && process(asMap(object), callback)) {
 						count++;
 						if (this.resolutionMethod == ResolutionMethod.FIRST_FOUND) {
@@ -210,13 +213,12 @@ public abstract class YamlProcessor {
 							" from YAML resource: " + resource);
 				}
 			}
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			handleProcessError(resource, ex);
 		}
 		return (count > 0);
 	}
-
+	
 	private void handleProcessError(Resource resource, IOException ex) {
 		if (this.resolutionMethod != ResolutionMethod.FIRST_FOUND &&
 				this.resolutionMethod != ResolutionMethod.OVERRIDE_AND_IGNORE) {
@@ -226,7 +228,7 @@ public abstract class YamlProcessor {
 			logger.warn("Could not load map from " + resource + ": " + ex.getMessage());
 		}
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> asMap(Object object) {
 		// YAML can have numbers as keys
@@ -236,7 +238,7 @@ public abstract class YamlProcessor {
 			result.put("document", object);
 			return result;
 		}
-
+		
 		Map<Object, Object> map = (Map<Object, Object>) object;
 		map.forEach((key, value) -> {
 			if (value instanceof Map) {
@@ -244,19 +246,18 @@ public abstract class YamlProcessor {
 			}
 			if (key instanceof CharSequence) {
 				result.put(key.toString(), value);
-			}
-			else {
+			} else {
 				// It has to be a map key in this case
 				result.put("[" + key.toString() + "]", value);
 			}
 		});
 		return result;
 	}
-
+	
 	private boolean process(Map<String, Object> map, MatchCallback callback) {
 		Properties properties = CollectionFactory.createStringAdaptingProperties();
 		properties.putAll(getFlattenedMap(map));
-
+		
 		if (this.documentMatchers.isEmpty()) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Merging document (no matchers set): " + map);
@@ -264,7 +265,7 @@ public abstract class YamlProcessor {
 			callback.process(properties, map);
 			return true;
 		}
-
+		
 		MatchStatus result = MatchStatus.ABSTAIN;
 		for (DocumentMatcher matcher : this.documentMatchers) {
 			MatchStatus match = matcher.matches(properties);
@@ -277,7 +278,7 @@ public abstract class YamlProcessor {
 				return true;
 			}
 		}
-
+		
 		if (result == MatchStatus.ABSTAIN && this.matchDefault) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Matched document with default matcher: " + map);
@@ -285,18 +286,19 @@ public abstract class YamlProcessor {
 			callback.process(properties, map);
 			return true;
 		}
-
+		
 		if (logger.isDebugEnabled()) {
 			logger.debug("Unmatched document: " + map);
 		}
 		return false;
 	}
-
+	
 	/**
 	 * Return a flattened version of the given map, recursively following any nested Map
 	 * or Collection values. Entries from the resulting map retain the same order as the
 	 * source. When called with the Map from a {@link MatchCallback} the result will
 	 * contain the same values as the {@link MatchCallback} Properties.
+	 *
 	 * @param source the source map
 	 * @return a flattened map
 	 * @since 4.1.3
@@ -306,98 +308,92 @@ public abstract class YamlProcessor {
 		buildFlattenedMap(result, source, null);
 		return result;
 	}
-
+	
 	private void buildFlattenedMap(Map<String, Object> result, Map<String, Object> source, @Nullable String path) {
 		source.forEach((key, value) -> {
 			if (StringUtils.hasText(path)) {
 				if (key.startsWith("[")) {
 					key = path + key;
-				}
-				else {
+				} else {
 					key = path + '.' + key;
 				}
 			}
 			if (value instanceof String) {
 				result.put(key, value);
-			}
-			else if (value instanceof Map) {
+			} else if (value instanceof Map) {
 				// Need a compound key
 				@SuppressWarnings("unchecked")
 				Map<String, Object> map = (Map<String, Object>) value;
 				buildFlattenedMap(result, map, key);
-			}
-			else if (value instanceof Collection) {
+			} else if (value instanceof Collection) {
 				// Need a compound key
 				@SuppressWarnings("unchecked")
 				Collection<Object> collection = (Collection<Object>) value;
 				if (collection.isEmpty()) {
 					result.put(key, "");
-				}
-				else {
+				} else {
 					int count = 0;
 					for (Object object : collection) {
 						buildFlattenedMap(result, Collections.singletonMap(
 								"[" + (count++) + "]", object), key);
 					}
 				}
-			}
-			else {
+			} else {
 				result.put(key, (value != null ? value : ""));
 			}
 		});
 	}
-
-
+	
 	/**
 	 * Callback interface used to process the YAML parsing results.
 	 */
 	public interface MatchCallback {
-
+		
 		/**
 		 * Process the given representation of the parsing results.
+		 *
 		 * @param properties the properties to process (as a flattened
-		 * representation with indexed keys in case of a collection or map)
-		 * @param map the result map (preserving the original value structure
-		 * in the YAML document)
+		 *                   representation with indexed keys in case of a collection or map)
+		 * @param map        the result map (preserving the original value structure
+		 *                   in the YAML document)
 		 */
 		void process(Properties properties, Map<String, Object> map);
 	}
-
-
+	
 	/**
 	 * Strategy interface used to test if properties match.
 	 */
 	public interface DocumentMatcher {
-
+		
 		/**
 		 * Test if the given properties match.
+		 *
 		 * @param properties the properties to test
 		 * @return the status of the match
 		 */
 		MatchStatus matches(Properties properties);
 	}
-
-
+	
 	/**
 	 * Status returned from {@link DocumentMatcher#matches(java.util.Properties)}.
 	 */
 	public enum MatchStatus {
-
+		
 		/**
 		 * A match was found.
 		 */
 		FOUND,
-
+		
 		/**
 		 * No match was found.
 		 */
 		NOT_FOUND,
-
+		
 		/**
 		 * The matcher should not be considered.
 		 */
 		ABSTAIN;
-
+		
 		/**
 		 * Compare two {@link MatchStatus} items, returning the most specific status.
 		 */
@@ -405,41 +401,39 @@ public abstract class YamlProcessor {
 			return (a.ordinal() < b.ordinal() ? a : b);
 		}
 	}
-
-
+	
 	/**
 	 * Method to use for resolving resources.
 	 */
 	public enum ResolutionMethod {
-
+		
 		/**
 		 * Replace values from earlier in the list.
 		 */
 		OVERRIDE,
-
+		
 		/**
 		 * Replace values from earlier in the list, ignoring any failures.
 		 */
 		OVERRIDE_AND_IGNORE,
-
+		
 		/**
 		 * Take the first resource in the list that exists and use just that.
 		 */
 		FIRST_FOUND
 	}
-
-
+	
 	/**
 	 * {@link Constructor} that supports filtering of unsupported types.
 	 * <p>If an unsupported type is encountered in a YAML document, an
 	 * {@link IllegalStateException} will be thrown from {@link #getClassForName}.
 	 */
 	private class FilteringConstructor extends Constructor {
-
+		
 		FilteringConstructor(LoaderOptions loaderOptions) {
 			super(loaderOptions);
 		}
-
+		
 		@Override
 		protected Class<?> getClassForName(String name) throws ClassNotFoundException {
 			Assert.state(YamlProcessor.this.supportedTypes.contains(name),
@@ -447,5 +441,5 @@ public abstract class YamlProcessor {
 			return super.getClassForName(name);
 		}
 	}
-
+	
 }
