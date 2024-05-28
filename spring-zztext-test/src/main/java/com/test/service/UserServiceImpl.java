@@ -17,7 +17,7 @@ public class UserServiceImpl implements UserService {
 	// 定义一个addUser()方法，模拟应用中的添加用户的方法
 	@Override
 	public Person addUser(String name, String sex) {
-		logger.info("执行Hello组件的addUser添加用户：" + name);
+		logger.info("执行Hello组件的addUser添加用户：{},sex:{}", name, sex);
 		if (name.length() < 3 || name.length() > 10) {
 			throw new IllegalArgumentException("name参数的长度必须大于3，小于10！");
 		}
