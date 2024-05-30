@@ -82,10 +82,10 @@ dependencies {
      * 针对5.0以下版本，对应依赖如下
      * compileOnly 'org.projectlombok:lombok:1.18.4'
      **/
-    // Lombok依赖,光是依赖这个还不行,得使用annotationProcessor
+    // Lombok依赖,光是依赖这个还不行,得使用annotationProcessor注解处理器
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
-    // 一开就报错,至今无法解决
-    //annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
+    // 需要去掉CompilerConventionsPlugin类中的"-Werror"选项,否则编译就会报错(警告转错误)导致编译失败程序无法运行
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
     testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
     testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.16.0'
 

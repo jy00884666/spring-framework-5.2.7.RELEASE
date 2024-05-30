@@ -16,10 +16,6 @@
 
 package org.springframework.build.compile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -27,28 +23,35 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.compile.JavaCompile;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * {@link Plugin} that applies conventions for compiling Java sources in Spring Framework.
  * <p>One can override the default Java source compatibility version
  * with a dedicated property on the CLI: {@code "./gradlew test -PjavaSourceVersion=11"}.
  *
+ * 用于处理Spring框架中编译时约定的插件。它确保了在编译时遵循一些约定，以便于Spring的工具（如Spring Boot的Starter模块）可以正确地处理和引用这些类
  * @author Brian Clozel
  * @author Sam Brannen
  */
 public class CompilerConventionsPlugin implements Plugin<Project> {
-
+	
 	/**
 	 * The project property that can be used to switch the Java source
 	 * compatibility version for building source and test classes.
 	 */
 	public static final String JAVA_SOURCE_VERSION_PROPERTY = "javaSourceVersion";
-
+	
+	// 如果你编译的版本使用的是11 的，需要改成如下，如果是jdk 8 的版本，这里可以不用修改
+	//public static final JavaVersion DEFAULT_COMPILER_VERSION = JavaVersion.VERSION_11;
 	public static final JavaVersion DEFAULT_COMPILER_VERSION = JavaVersion.VERSION_1_8;
-
+	
 	private static final List<String> COMPILER_ARGS;
-
+	
 	private static final List<String> TEST_COMPILER_ARGS;
-
+	
 	static {
 		List<String> commonCompilerArgs = Arrays.asList(
 				"-Xlint:serial", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann",
@@ -57,21 +60,25 @@ public class CompilerConventionsPlugin implements Plugin<Project> {
 		);
 		COMPILER_ARGS = new ArrayList<>();
 		COMPILER_ARGS.addAll(commonCompilerArgs);
+		/**
+		 * 需要去掉"-Werror"选项否则引入lombok会警告转错误无法编译
+		 * -Werror会把警告当做错误处理
+		 * */
 		COMPILER_ARGS.addAll(Arrays.asList(
 				"-Xlint:varargs", "-Xlint:fallthrough", "-Xlint:rawtypes", "-Xlint:deprecation",
-				"-Xlint:unchecked", "-Werror"
+				"-Xlint:unchecked"/*, "-Werror"*/
 		));
 		TEST_COMPILER_ARGS = new ArrayList<>();
 		TEST_COMPILER_ARGS.addAll(commonCompilerArgs);
 		TEST_COMPILER_ARGS.addAll(Arrays.asList("-Xlint:-varargs", "-Xlint:-fallthrough", "-Xlint:-rawtypes",
 				"-Xlint:-deprecation", "-Xlint:-unchecked", "-parameters"));
 	}
-
+	
 	@Override
 	public void apply(Project project) {
 		project.getPlugins().withType(JavaPlugin.class, javaPlugin -> applyJavaCompileConventions(project));
 	}
-
+	
 	/**
 	 * Applies the common Java compiler options for main sources, test fixture sources, and
 	 * test sources.
@@ -82,12 +89,11 @@ public class CompilerConventionsPlugin implements Plugin<Project> {
 		if (project.hasProperty(JAVA_SOURCE_VERSION_PROPERTY)) {
 			JavaVersion javaSourceVersion = JavaVersion.toVersion(project.property(JAVA_SOURCE_VERSION_PROPERTY));
 			java.setSourceCompatibility(javaSourceVersion);
-		}
-		else {
+		} else {
 			java.setSourceCompatibility(DEFAULT_COMPILER_VERSION);
 		}
 		java.setTargetCompatibility(DEFAULT_COMPILER_VERSION);
-
+		
 		project.getTasks().withType(JavaCompile.class)
 				.matching(compileTask -> compileTask.getName().equals(JavaPlugin.COMPILE_JAVA_TASK_NAME))
 				.forEach(compileTask -> {
@@ -102,5 +108,5 @@ public class CompilerConventionsPlugin implements Plugin<Project> {
 					compileTask.getOptions().setEncoding("UTF-8");
 				});
 	}
-
+	
 }
